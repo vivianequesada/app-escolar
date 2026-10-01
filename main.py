@@ -100,10 +100,87 @@ if matricula in st.session_state.professores_db:
     # PERFIL: PROFESSOR REGULAR
     elif usuario['cargo'] == "Professor Regular":
         st.subheader(f"Sala Virtual: {usuario['turma']}")
-        menu_professor = st.selectbox(
+               menu_professor = st.selectbox(
             "Selecione o Módulo de Trabalho:",
-            ["📝 Diário & Chamada", "📅 Planejamento BNCC", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos"]
-        )
+            ["📝 Diário & Chamada", "📅 Planejamento BNCC", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos", "🏢 Agendamento de Espaços", "📅 Calendário de Avaliações", "📢 Quadro de Avisos"]
+        )        elif menu_professor == "🏢 Agendamento de Espaços":
+            st.header("🏢 Agendamento de Espaços Coletivos")
+            st.caption("O sistema gerencia o uso dos ambientes compartilhados da escola.")
+            
+            # Inicializa a lista de agendamentos no estado da sessão se não existir
+            if "agendamentos_escola" not in st.session_state:
+                st.session_state.agendamentos_escola = []
+                
+            espacos_disponiveis = ["Quadra / Pátio Externo", "Sala de Informática", "Espaço de Leitura / Brinquedoteca"]
+            
+            with st.form("form_reserva", clear_on_submit=True):
+                espaco_sel = st.selectbox("Selecione o Ambiente:", espacos_disponiveis)
+                data_reserva = st.date_input("Data do Uso:", value=os.datetime.date.today() if hasattr(os, 'datetime') else None)
+                h_entrada = st.time_input("Horário de Entrada:")
+                h_saida = st.time_input("Horário de Saída:")
+                atividade_p = st.text_input("Atividade Pedagógica Planejada:", placeholder="Ex: Aula de Psicomotricidade")
+                
+                if st.form_submit_button("🗓️ Confirmar Agendamento de Horário"):
+                    if atividade_p.strip():
+                        # Checagem simples de conflito de horário
+                        conflito = False
+                        for ag in st.session_state.agendamentos_escola:
+                            if ag["espaco"] == espaco_sel and ag["data"] == str(data_reserva) and (h_entrada < ag["saida"] and h_saida > ag["entrada"]):
+                                conflito = True
+                                st.error(f"⚠️ Conflito! O espaço já está reservado por {ag['professor']} para a turma {ag['turma']}.")
+                                break
+                        
+                        if not conflito:
+                            st.session_state.agendamentos_escola.append({
+                                "espaco": espaco_sel, "data": str(data_reserva), 
+                                "entrada": h_entrada, "saida": h_saida, 
+                                "turma": usuario['turma'], "professor": usuario['nome'], "atividade": atividade_p
+                            })
+                            st.success("Ambiente reservado com sucesso!")
+                            st.rerun()
+                    else:
+                        st.error("Por favor, informe a atividade planejada.")
+
+            if st.session_state.agendamentos_escola:
+                st.write("### 📅 Cronograma de Uso dos Ambientes")
+                for ag in reversed(st.session_state.agendamentos_escola):
+                    st.info(f"🏢 **{ag['espaco']}** | Dia: {ag['data']} ({ag['entrada'].strftime('%H:%M')} às {ag['saida'].strftime('%H:%M')}) -> Turma: **{ag['turma']}** (Resp: {ag['professor']})")
+
+        elif menu_professor == "📅 Calendário de Avaliações":
+            st.header("📅 Calendário de Avaliações e Acompanhamentos")
+            if "avaliacoes_calendario" not in st.session_state:
+                st.session_state.avaliacoes_calendario = []
+                
+            with st.form("form_avaliacao", clear_on_submit=True):
+                tit_av = st.text_input("Nome do Acompanhamento/Avaliação:", placeholder="Ex: Portfólio do 1º Trimestre")
+                tipo_av = st.selectbox("Instrumento:", ["Portfólio", "Ficha de Observação", "Relatório Individual", "Outro"])
+                data_av = st.date_input("Data Limite de Postagem:")
+                if st.form_submit_button("💾 Adicionar ao Calendário"):
+                    if tit_av.strip():
+                        st.session_state.avaliacoes_calendario.append({"titulo": tit_av, "tipo": tipo_av, "data": str(data_av), "turma": usuario['turma']})
+                        st.success("Avaliação listada no calendário escolar!")
+                        st.rerun()
+
+            if st.session_state.avaliacoes_calendario:
+                st.write("### 📌 Prazos Pedagógicos Ativos")
+                for av in st.session_state.avaliacoes_calendario:
+                    if av["turma"] == usuario['turma']:
+                        st.warning(f"📆 **{av['titulo']}** ({av['tipo']}) — Entrega prevista até: {av['data']}")
+
+        elif menu_professor == "📢 Quadro de Avisos":
+            st.header("📢 Mural de Comunicados da Escola")
+            st.caption("Avisos postados pela direção e coordenação pedagógica.")
+            
+            # Puxa o histórico de avisos gerais enviados do banco de comunicados
+            if st.session_state.atas_salvas:
+                for ata in reversed(st.session_state.atas_salvas):
+                    with st.container(border=True):
+                        st.markdown(f"**📢 COMUNICADO OFICIAL — {ata['trimestre'].upper()}**")
+                        st.caption(f"Emitido por: {ata['emissor']} para a turma {ata['turma']}")
+                        st.write(ata['conteudo'])
+            else:
+                st.info("Nenhum aviso listado no mural até o momento.")
+
         st.write("---")
 
         alunos_turma = [a for a in st.session_state.alunos_db if a['turma'] == usuario['turma']]
