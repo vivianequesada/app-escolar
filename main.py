@@ -303,22 +303,21 @@ if usuario:
                             salvar_dados("db")
                             st.success(f"{nome_p} cadastrado!")
                             st.rerun()
-                            
             elif acao_p == "Editar Perfil":
                 p_sel = st.selectbox("Selecione para Editar:", list(st.session_state.professores_db.keys()), format_func=lambda x: f"{st.session_state.professores_db[x]['nome']} ({x})")
                 with st.form("edit_prof"):
                     nome_e = st.text_input("Alterar Nome:", value=st.session_state.professores_db[p_sel]['nome'])
                     cargo_e = st.selectbox("Alterar Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"], index=["Professor Regular", "Professor AEE", "Monitor", "Administrador"].index(st.session_state.professores_db[p_sel]['cargo']))
                     turma_atual = st.session_state.professores_db[p_sel]['turma']
-                 idx_turma = TURMAS_ESCOLARES.index(turma_atual) if turma_atual in TURMAS_ESCOLARES else 0
-                 turma_e = st.selectbox("Alterar Turma:", TURMAS_ESCOLARES, index=idx_turma)
-
+                    idx_turma = TURMAS_ESCOLARES.index(turma_atual) if turma_atual in TURMAS_ESCOLARES else 0
+                    turma_e = st.selectbox("Alterar Turma:", TURMAS_ESCOLARES, index=idx_turma)
                     email_e = st.text_input("Alterar E-mail:", value=st.session_state.professores_db[p_sel].get('email',''))
                     if st.form_submit_button("💾 Atualizar Dados"):
                         st.session_state.professores_db[p_sel] = {"nome": nome_e, "cargo": cargo_e, "turma": turma_e, "email": email_e}
                         salvar_dados("db")
                         st.success("Dados atualizados!")
                         st.rerun()
+
                         
             elif acao_p == "Excluir Registro":
                 p_del = st.selectbox("Selecione para Deletar:", list(st.session_state.professores_db.keys()), format_func=lambda x: f"{st.session_state.professores_db[x]['nome']} ({x})")
