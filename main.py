@@ -219,7 +219,7 @@ if matricula in st.session_state.professores_db:
                     mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
                     nome_p = st.text_input("Nome Completo:")
                     cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
-                    turma_p = st.selectbox("Turma Atribuída:", ["Berçário", "Maternal I", "Maternal II - 1", "Maternal II - 2", "1ª Etapa -1"," 1ª Etapa - 2", "2ª Etapa - 1","2ª Etapa - 2", "Geral"])
+                    turma_p = st.selectbox("Turma Atribuída:", ["Berçário I", "Berçário II", "Maternal I", "Maternal II - 1", "Maternal II - 2", "1ª Etapa -1"," 1ª Etapa - 2", "2ª Etapa - 1","2ª Etapa - 2", "Geral"])
                     if st.form_submit_button("➕ Salvar Funcionário"):
                         if mat_n and nome_p:
                             st.session_state.professores_db[mat_n] = {"nome": nome_p, "cargo": cargo_p, "turma": turma_p}
@@ -232,7 +232,7 @@ if matricula in st.session_state.professores_db:
                 with st.form("edit_prof"):
                     nome_e = st.text_input("Alterar Nome:", value=st.session_state.professores_db[p_sel]['nome'])
                     cargo_e = st.selectbox("Alterar Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"], index=["Professor Regular", "Professor AEE", "Monitor", "Administrador"].index(st.session_state.professores_db[p_sel]['cargo']))
-                    turma_e = st.selectbox("Alterar Turma:", ["Berçário", "Maternal I", "Maternal II", "Pré I", "Pré II", "Geral", "Inclusão Geral", "Plantão"], value=st.session_state.professores_db[p_sel]['turma'])
+                    turma_e = st.selectbox("Alterar Turma:", ["Berçário I", "Berçário II", "Maternal I", "Maternal II - 1", "Maternal II - 2", "1ª Etapa -1"," 1ª Etapa - 2", "2ª Etapa - 1","2ª Etapa - 2", "Geral", "Inclusão Geral", "Plantão"], value=st.session_state.professores_db[p_sel]['turma'])
                     if st.form_submit_button("💾 Atualizar Dados"):
                         st.session_state.professores_db[p_sel] = {"nome": nome_e, "cargo": cargo_e, "turma": turma_e}
                         salvar_dados("db")
@@ -257,7 +257,7 @@ if matricula in st.session_state.professores_db:
             if acao_a == "Cadastrar Novo Aluno":
                 with st.form("add_aluno", clear_on_submit=True):
                     nome_n = st.text_input("Nome Completo do Aluno:")
-                    turma_n = st.selectbox("Turma Escolar:", ["Berçário", "Maternal I", "Maternal II", "Pré I", "Pré II"])
+                    turma_n = st.selectbox("Turma Escolar:", ["Berçário I", "Berçário II", "Maternal I", "Maternal II - 1", "Maternal II - 2", "1ª Etapa -1"," 1ª Etapa - 2", "2ª Etapa - 1","2ª Etapa - 2", "Geral"])
                     alergias_n = st.text_input("Alergias:", value="Nenhuma")
                     rest_n = st.text_input("Restrições Alimentares:", value="Nenhuma")
                     retirada_n = st.text_input("Autorizados para Retirada:")
@@ -275,7 +275,7 @@ if matricula in st.session_state.professores_db:
                 aluno_e = st.session_state.alunos_db[a_sel_idx]
                 with st.form("edit_aluno"):
                     nome_ae = st.text_input("Nome:", value=aluno_e['nome'])
-                    turma_ae = st.selectbox("Turma:", ["Berçário", "Maternal I", "Maternal II", "Pré I", "Pré II"], index=["Berçário", "Maternal I", "Maternal II", "Pré I", "Pré II"].index(aluno_e['turma']))
+                    turma_ae = st.selectbox("Turma:", ["Berçário I", "Berçário II", "Maternal I", "Maternal II - 1", "Maternal II - 2", "1ª Etapa -1"," 1ª Etapa - 2", "2ª Etapa - 1","2ª Etapa - 2", "Geral"].index(aluno_e['turma']))
                     alergias_ae = st.text_input("Alergias:", value=aluno_e['alergias'])
                     rest_ae = st.text_input("Restrições:", value=aluno_e['restricoes'])
                     retirada_ae = st.text_input("Retirada:", value=aluno_e['retirada'])
