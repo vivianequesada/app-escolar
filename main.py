@@ -357,3 +357,4 @@ if usuario:
                 with st.form("add_aluno", clear_on_submit=True):
                     nome_n = st.text_input("Nome Completo do Aluno:")
                     turma_n = st.selectbox("Turma Escolar:", TURMAS_ESCOLARES)
+                    salvar_dados("db")
