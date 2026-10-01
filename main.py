@@ -8,12 +8,17 @@ from datetime import date
 # =====================================================================
 st.set_page_config(page_title="🧸 Portal de Gestão da Educação Infantil", layout="wide", page_icon="🧸")
 
-# ARQUIVOS DE BANCO DE DADOS LOCAL (JSON)
+# DIRETÓRIOS E BANCOS DE DADOS LOCAL (JSON)
 DB_FILE = "professores_db.json"
 ALUNOS_FILE = "alunos_db.json"
 ATAS_FILE = "atas_db.json"
 PLAN_FILE = "planejamentos_db.json"
 OCORRENCIAS_FILE = "ocorrencias_db.json"
+UPLOAD_DIR = "documentos_pdf"
+
+# Cria a pasta física para armazenar os arquivos PDF se ela não existir
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 # CONFIGURAÇÕES ESCOLARES ATUALIZADAS
 TURMAS_ESCOLARES = [
@@ -52,7 +57,8 @@ def carregar_dados():
                 "historico_aee": [], "encaminhamentos": "Nenhum lançado",
                 "terapias": "Terapia Ocupacional e Fonoaudiologia",
                 "dias_horarios_terapias": "Terças e Quintas às 14:00",
-                "foto": "👶", "faltas_consecutivas": 0
+                "foto": "👶", "faltas_consecutivas": 0,
+                "arquivos_pdf": []
             }
         ]
         with open(ALUNOS_FILE, "w", encoding="utf-8") as f:
@@ -152,7 +158,7 @@ if usuario:
                 materia = st.selectbox("Componente Curricular / Matéria:", MATERIAS_PEDAGOGICAS)
                 atividades = st.text_area("Descrição Detalhada das Vivências Pedagógicas:")
                 if st.form_submit_button("💾 Salvar Planejamento"):
-                    salvar_dados("plan", {"professor": usuario['nome'], "turma": usuario['turma'], "mes": mes, "quinzena": quinzena, "materia": materia, "conteudo": activities})
+                    salvar_dados("plan", {"professor": usuario['nome'], "turma": usuario['turma'], "mes": mes, "quinzena": quinzena, "materia": materia, "conteudo": atividades})
                     st.success(f"Plano quinzenal salvo! Uma cópia de segurança foi enviada para seu e-mail: {usuario['email']}")
 
         elif menu_prof == "👶 Ocorrências da Rotina":
@@ -172,16 +178,13 @@ if usuario:
                 trimestre = st.selectbox("Trimestre Letivo:", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
                 
                 st.write("### Deliberações Separadas por Componente:")
-                d_verbal = st.text_area("1. Linguagem Verbal:")
-                d_mat = st.text_area("2. Linguagem Matemática:")
-                d_soc = st.text_area("3. Indivíduo e Sociedade:")
                 d_corp = st.text_area("4. Cultura, Corpo e Movimento:")
                 d_artes = st.text_area("5. Artes:")
                 d_aee = st.text_area("6. Flexibilizações AEE:")
                 
                 if st.form_submit_button("📝 Protocolar e Consolidar Ata"):
                     payload_ata = {
-                        "trimestre": trimestre, "turma": usuario['turma'], "emissor": usuario['name'],
+                        "trimestre": trimestre, "turma": usuario['turma'], "emissor": usuario['nome'],
                         "dados": {
                             "Linguagem Verbal": d_verbal, "Linguagem Matemática": d_mat,
                             "Indivíduo e Sociedade": d_soc, "Cultura, Corpo e Movimento": d_corp,
@@ -220,7 +223,7 @@ if usuario:
     # =====================================================================
     elif usuario['cargo'] == "Professor AEE":
         st.header("🧩 Atendimento Educacional Especializado (AEE / PDI / PEI)")
-        menu_aee = st.selectbox("Módulos:", ["Lançar Relatório Trimestral (PEI)", "Histórico e Exportação PDF"])
+        menu_aee = st.selectbox("Módulos:", ["Lançar Relatório Trimestral (PEI)", "Anexar Arquivo PDF Externo", "Histórico do Aluno"])
         
         if menu_aee == "Lançar Relatório Trimestral (PEI)":
             with st.form("form_aee_pdi", clear_on_submit=True):
@@ -240,41 +243,69 @@ if usuario:
                     salvar_dados("alunos")
                     st.success("Parecer arquivado com sucesso!")
                     
-        elif menu_aee == "Histórico e Exportação PDF":
+        elif menu_aee == "Anexar Arquivo PDF Externo":
+            st.subheader("📁 Upload de Documentos e Laudos em PDF")
+            aluno_upload = st.selectbox("Selecione o Aluno para Vincular o Documento:", [a['nome'] for a in st.session_state.alunos_db])
+            arquivo_enviado = st.file_uploader("Escolha o arquivo PDF do Relatório/PEI/Laudo:", type=["pdf"])
+            nome_doc = st.text_input("Nome/Identificação do Documento:", placeholder="Ex: PEI Assinado 1 Trimestre")
+            if st.button("➕ Upload e Salvar no Prontuário"):
+                if arquivo_enviado is not None and nome_doc.strip():
+                    nome_limpo = f"{aluno_upload.replace(' ', '')}{nome_doc.replace(' ', '_')}.pdf"
+                    caminho_salvamento = os.path.join(UPLOAD_DIR, nome_limpo)
+                    with open(caminho_salvamento, "wb") as f:
+                        f.write(arquivo_enviado.getbuffer())
+                    for a in st.session_state.alunos_db:
+                        if a['nome'] == aluno_upload:
+                            if 'arquivos_pdf' not in a:
+                                a['arquivos_pdf'] = []
+                            a['arquivos_pdf'].append({
+                                "nome": nome_doc,
+                                "data": date.today().strftime("%d/%m/%Y"),
+                                "caminho": caminho_salvamento
+                            })
+                    salvar_dados("alunos")
+                    st.success(f"O documento '{nome_doc}' foi anexado com sucesso à ficha de {aluno_upload}!")
+                    st.rerun()
+                else:
+                    st.error("Por favor, selecione um arquivo PDF válido e dê um nome descritivo ao documento.")
+
+        elif menu_aee == "Histórico do Aluno":
             aluno_sel = st.selectbox("Selecione o Aluno:", [a['nome'] for a in st.session_state.alunos_db])
             for a in st.session_state.alunos_db:
                 if a['nome'] == aluno_sel:
-                    st.write(f"🩺 Terapias Externas: {a.get('terapias','Nenhuma')}")
+                    st.write(f"激️ Terapias Externas: {a.get('terapias','Nenhuma')}")
                     st.write(f"⏱️ Dias/Horários Clínicos: {a.get('dias_horarios_terapias','Não informado')}")
                     historico = a.get('historico_aee', [])
                     if historico:
-                        for idx, rel in enumerate(historico):
+                        st.subheader("📚 Histórico de Relatórios Digitados")
+                        for rel in historico:
                             with st.container(border=True):
                                 st.markdown(f"##### {rel['periodo']} (Gravado em {rel['data_registro']})")
-                                
-                                html_pei = f"""
-                                <div id="doc-pei-{idx}" style="border: 1px solid #aaa; padding: 20px; background-color: #fff; color: #111; font-family: Arial, sans-serif; max-width: 750px; margin: auto;">
-                                    <h3 style="text-align: center;">PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI/PEI)</h3>
-                                    <p><b>Aluno:</b> {a['nome']} | <b>Turma:</b> {a['turma']}</p>
-                                    <p><b>Período:</b> {rel['periodo']} | <b>Data:</b> {rel['data_registro']}</p>
-                                    <hr>
-                                    <p><b>Objetivos e Adaptações:</b><br>{rel['objetivos']}</p>
-                                    <p><b>Recursos e Estratégias:</b><br>{rel['recursos']}</p>
-                                    <br><p><b>Responsável Técnico:</b> {rel['professor']} ___________________________</p>
-                                </div><br>
-                                <div style="text-align: center;">
-                                    <button onclick=" + '"' + f"var win = window.open('', '_blank'); win.document.write(document.getElementById('doc-pei-{idx}').outerHTML); win.document.close(); win.print();" + '"' + " style='padding: 6px 12px; font-size: 13px; background-color: #008CBA; color: white; border: none; border-radius: 4px; cursor: pointer;'>🖨️ Imprimir / Salvar em PDF</button>
-                                </div>
-                                """
-                                st.html(html_pei)
+                                st.write(f"Objetivos: {rel['objetivos']}")
+                                st.write(f"Recursos: {rel['recursos']}")
+                    arquivos_salvos = a.get('arquivos_pdf', [])
+                    if arquivos_salvos:
+                        st.write("---")
+                        st.subheader("📁 Arquivos PDF Anexados no Prontuário")
+                        for doc_anexo in arquivos_salvos:
+                            with st.container(border=True):
+                                c_doc1, c_doc2 = st.columns([3, 1])
+                                c_doc1.write(f"📄 {doc_anexo['nome']} (Anexado em {doc_anexo['data']})")
+                                if os.path.exists(doc_anexo['caminho']):
+                                    with open(doc_anexo['caminho'], "rb") as f_pdf:
+                                        c_doc2.download_button(
+                                            label="📥 Abrir PDF",
+                                            data=f_pdf.read(),
+                                            file_name=os.path.basename(doc_anexo['caminho']),
+                                            mime="application/pdf",
+                                            key=doc_anexo['caminho']
+                                        )
 
     # =====================================================================
     # PERFIL: ADMINISTRADOR (DIREÇÃO)
     # =====================================================================
     elif usuario['cargo'] == "Administrador":
         st.header("⚙️ Painel de Controle da Direção e Coordenação")
-        
-        # ALERTA DE EVASÃO AUTOMÁTICO EXIGIDO POR VOCÊ
         st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas >= 3)")
         alertas_ativos = False
         for aluno in st.session_state.alunos_db:
@@ -286,12 +317,11 @@ if usuario:
         st.divider()
         
         maba1, maba2, maba3, maba4 = st.tabs(["👥 Gerenciar Professores", "👶 Matricular Alunos", "📅 Ver Planejamentos", "📋 Histórico de Ocorrências"])
-        
         with maba1:
             st.subheader("Gerenciamento de Funcionários")
             acao_p = st.radio("Operação (Professores):", ["Cadastrar Novo", "Editar Perfil", "Excluir Registro"], horizontal=True)
             if acao_p == "Cadastrar Novo":
-                with st.form("add_prof", clear_on_submit=True):
+                 with st.form("add_prof", clear_on_submit=True):
                     mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
                     nome_p = st.text_input("Nome Completo:")
                     cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
@@ -303,6 +333,7 @@ if usuario:
                             salvar_dados("db")
                             st.success(f"{nome_p} cadastrado!")
                             st.rerun()
+                            
             elif acao_p == "Editar Perfil":
                 p_sel = st.selectbox("Selecione para Editar:", list(st.session_state.professores_db.keys()), format_func=lambda x: f"{st.session_state.professores_db[x]['nome']} ({x})")
                 with st.form("edit_prof"):
@@ -311,94 +342,3 @@ if usuario:
                     turma_atual = st.session_state.professores_db[p_sel]['turma']
                     idx_turma = TURMAS_ESCOLARES.index(turma_atual) if turma_atual in TURMAS_ESCOLARES else 0
                     turma_e = st.selectbox("Alterar Turma:", TURMAS_ESCOLARES, index=idx_turma)
-                    email_e = st.text_input("Alterar E-mail:", value=st.session_state.professores_db[p_sel].get('email',''))
-                    if st.form_submit_button("💾 Atualizar Dados"):
-                        st.session_state.professores_db[p_sel] = {"nome": nome_e, "cargo": cargo_e, "turma": turma_e, "email": email_e}
-                        salvar_dados("db")
-                        st.success("Dados atualizados!")
-                        st.rerun()
-
-                        
-            elif acao_p == "Excluir Registro":
-                p_del = st.selectbox("Selecione para Deletar:", list(st.session_state.professores_db.keys()), format_func=lambda x: f"{st.session_state.professores_db[x]['nome']} ({x})")
-                if st.button("❌ Confirmar Exclusão Definitiva"):
-                    if p_del == matricula: 
-                        st.error("Você não pode excluir a sua própria conta ativa.")
-                    else:
-                        del st.session_state.professores_db[p_del]
-                        salvar_dados("db")
-                        st.success("Funcionário removido com sucesso!")
-                        st.rerun()        
-                        
-        with maba2:
-            st.subheader("Gerenciamento do Carômetro de Alunos")
-            acao_a = st.radio("Operação (Alunos):", ["Cadastrar Novo Aluno", "Editar Ficha de Saúde & Terapias", "Excluir Aluno"], horizontal=True)
-            
-            if acao_a == "Cadastrar Novo Aluno":
-                with st.form("add_aluno", clear_on_submit=True):
-                    nome_n = st.text_input("Nome Completo do Aluno:")
-                    turma_n = st.selectbox("Turma Escolar:", TURMAS_ESCOLARES)
-                    alergias_n = st.text_input("Alergias Clínicas / Restrições Médicas:", value="Nenhuma")
-                    rest_n = st.text_input("Restrições Alimentares (Ex: Lactose, Glúten):", value="Nenhuma")
-                    retirada_n = st.text_input("Autorizados para Retirada (Nome Completo/Parentesco):")
-                    contato_n = st.text_input("Contatos de Emergência (Telefone dos Pais):")
-                    terapias_n = st.text_input("Faz terapias externas? Se sim, quais (Ex: Fono, TO):", value="Nenhuma")
-                    horario_t = st.text_input("Dias e Horários das Terapias Clínicas:", value="Não informado")
-                    
-                    if st.form_submit_button("➕ Registrar Matrícula"):
-                        if nome_n:
-                            novo_a = {
-                                "id": str(len(st.session_state.alunos_db) + 1),
-                                "nome": nome_n,
-                                "turma": turma_n,
-                                "alergias": alergias_n,
-                                "restricoes": rest_n,
-                                "retirada": retirada_n,
-                                "contato": contato_n,
-                                "historico_aee": [],
-                                "encaminhamentos": "Nenhum lançado",
-                                "terapias": terapias_n,
-                                "dias_horarios_terapias": horario_t,
-                                "foto": "👶",
-                                "faltas_consecutivas": 0
-                            }
-                            st.session_state.alunos_db.append(novo_a)
-                            salvar_dados("alunos")
-                            st.success(f"Ficha escolar e matrícula de {nome_n} salvas com sucesso!")
-                            st.rerun()
-                        else:
-                            st.error("Por favor, digite o nome completo do aluno para matricular.")
-                            
-            elif acao_a == "Editar Ficha de Saúde & Terapias":
-                a_sel_idx = st.selectbox("Selecione a Criança para Modificar:", range(len(st.session_state.alunos_db)), format_func=lambda x: st.session_state.alunos_db[x]['nome'])
-                aluno_e = st.session_state.alunos_db[a_sel_idx]
-                with st.form("edit_aluno"):
-                    nome_ae = st.text_input("Nome do Aluno:", value=aluno_e['nome'])
-                    turma_ae = st.selectbox("Turma Escolar:", TURMAS_ESCOLARES, index=TURMAS_ESCOLARES.index(aluno_e['turma']) if aluno_e['turma'] in TURMAS_ESCOLARES else 0)
-                    alergias_ae = st.text_input("Alergias:", value=aluno_e['alergias'])
-                    rest_ae = st.text_input("Restrições Alimentares:", value=aluno_e['restricoes'])
-                    retirada_ae = st.text_input("Permissões de Retirada:", value=aluno_e['retirada'])
-                    contato_ae = st.text_input("Contatos:", value=aluno_e['contato'])
-                    encam_ae = st.text_area("Encaminhamentos Clínicos/Pedagógicos:", value=aluno_e.get('encaminhamentos', ''))
-                    ter_ae = st.text_input("Terapias Externas Ativas:", value=aluno_e.get('terapias', ''))
-                    hor_ae = st.text_input("Dias e Horários das Terapias:", value=aluno_e.get('dias_horarios_terapias', ''))
-                    
-                    if st.form_submit_button("💾 Salvar Alterações Globais"):
-                        st.session_state.alunos_db[a_sel_idx] = {
-                            "id": aluno_e['id'], "nome": nome_ae, "turma": turma_ae, "alergias": allergies_ae if 'allergies_ae' in locals() else alergias_ae, 
-                            "restricoes": rest_ae, "retirada": retirada_ae, "contato": contato_ae, 
-                            "historico_aee": aluno_e.get('historico_aee', []), "encaminhamentos": encam_ae, "terapias": ter_ae, 
-                            "dias_horarios_terapias": hor_ae, "foto": aluno_e['foto'], "faltas_consecutivas": aluno_e['faltas_consecutivas']
-                        }
-                        salvar_dados("alunos")
-                        st.success("Ficha escolar atualizada com sucesso pela direção!")
-                        st.rerun()
-                        
-            elif acao_a == "Excluir Aluno":
-                a_del_idx = st.selectbox("Selecione o Aluno para Remover do Sistema:", range(len(st.session_state.alunos_db)), format_func=lambda x: f"{st.session_state.alunos_db[x]['nome']} ({st.session_state.alunos_db[x]['turma']})")
-                if st.button("❌ Confirmar Exclusão do Aluno"):
-                    nome_removido = st.session_state.alunos_db[a_del_idx]['nome']
-                    st.session_state.alunos_db.pop(a_del_idx)
-                    salvar_dados("alunos")
-                    st.success(f"Aluno {nome_removido} foi removido do sistema escolar.")
-                    st.rerun()
