@@ -2,9 +2,7 @@ import streamlit as st
 import json
 import os
 
-# =====================================================================
-# CONFIGURAÇÃO DA PÁGINA (Deve ser o primeiro comando Streamlit)
-# =====================================================================
+# CONFIGURAÇÃO DA PÁGINA
 st.set_page_config(page_title="Gestão Escolar - Educação Infantil", layout="wide", page_icon="🧸")
 
 # BANCOS DE DADOS EM FORMATO JSON
@@ -14,9 +12,6 @@ PLAN_FILE = "planejamentos_db.json"
 ALUNOS_FILE = "alunos_db.json"
 OCORRENCIAS_FILE = "ocorrencias_db.json"
 
-# =====================================================================
-# FUNÇÕES DE BANCO DE DADOS (CARREGAR E SALVAR)
-# =====================================================================
 def carregar_dados():
     if not os.path.exists(DB_FILE):
         default_profs = {
@@ -74,9 +69,7 @@ def salvar_dados(chave, payload=None):
 
 carregar_dados()
 
-# =====================================================================
 # LOGIN NA BARRA LATERAL
-# =====================================================================
 st.sidebar.title("🔐 Acesso ao Painel")
 matricula = st.sidebar.text_input("Matrícula", type="password")
 
@@ -88,9 +81,7 @@ if matricula in st.session_state.professores_db:
     st.title("🧸 Portal de Gestão da Educação Infantil")
     st.divider()
 
-    # =====================================================================
     # PERFIL: MONITORES
-    # =====================================================================
     if usuario['cargo'] == "Monitor":
         st.header("🚨 Carômetro de Segurança Escolar (Acesso Rápido)")
         busca = st.text_input("🔍 Buscar Criança pelo Nome:")
@@ -106,9 +97,7 @@ if matricula in st.session_state.professores_db:
                         st.markdown(f"🪪 **Autorização de Retirada:** {aluno['retirada']}")
                         st.markdown(f"📞 **Telefones de Contato:** {aluno['contato']}")
 
-    # =====================================================================
     # PERFIL: PROFESSOR REGULAR
-    # =====================================================================
     elif usuario['cargo'] == "Professor Regular":
         aba1, aba2, aba3, aba4, aba5 = st.tabs(["📝 Diário & Chamada", "📅 Planejamento", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos"])
         
@@ -166,7 +155,7 @@ if matricula in st.session_state.professores_db:
         with aba5:
             st.header("Ata de Conselho de Classe")
             with st.form("form_ata", clear_on_submit=True):
-                trimestre = st.selectbox("Trimestre de Avaliação", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
+                trimestre = st.selectbox("Trimestre de Evaluacao", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
                 deliberacoes = st.text_area("Parecer Coletivo:")
                 if st.form_submit_button("📝 Registrar e Gerar Folha"):
                     salvar_dados("atas", {"trimestre": trimestre, "turma": usuario['turma'], "conteudo": deliberacoes, "emissor": usuario['nome']})
@@ -174,24 +163,19 @@ if matricula in st.session_state.professores_db:
 
             if st.session_state.atas_salvas:
                 st.divider()
-ultima_ata = st.session_state.atas_salvas[-1]
-st.markdown(f"""
-
-ATA OFICIAL DE CONSELHO
-{ultima_ata['trimestre'].upper()} | TURMA: {ultima_ata['turma'].upper()}
-
-
-{ultima_ata['conteudo']}
-
-""", unsafe_allow_html=True)
-# Assinaturas dos professores cadastrados
-for p_id, p_info in st.session_state.professores_db.items():
-if p_info['cargo'] == "Professor Regular":
+                ultima_ata = st.session_state.atas_salvas[-1]
+                st.markdown(f"""
+                <div style="border: 2px solid #333; padding: 25px; background-color: #fff; color: #111; font-family: monospace; margin-bottom: 20px;">
+                    <h4 style="text-align: center;">ATA OFICIAL DE CONSELHO</h4>
+                    <strong>{ultima_ata['trimestre'].upper()}</strong> | TURMA: {ultima_ata['turma'].upper()}<br><br>
+                    {ultima_ata['conteudo']}
+                </div>
+                """, unsafe_allow_html=True)
+                for p_id, p_info in st.session_state.professores_db.items():
+                    if p_info['cargo'] == "Professor Regular":
 st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
 st.markdown("", unsafe_allow_html=True)
-# =====================================================================
 # PERFIL: PROFESSOR AEE
-# =====================================================================
 elif usuario['cargo'] == "Professor AEE":
 st.header("🧩 Planejamento Individualizado por Aluno (AEE)")
 with st.form("form_aee", clear_on_submit=True):
@@ -200,12 +184,9 @@ objetivos = st.text_area("Objetivos de Flexibilização Curricular:")
 recursos = st.text_area("Recursos Pedagógicos Utilizados:")
 if st.form_submit_button("💾 Salvar Planejamento AEE"):
 st.success("Planejamento gravado!")
-# =====================================================================
-# PERFIL: ADMINISTRADOR (Painel Geral da Direção + CRUD Completo)
-# =====================================================================
+# PERFIL: ADMINISTRADOR
 elif usuario['cargo'] == "Administrador":
 st.header("⚙️ Painel de Controle da Direção e Coordenação")
-# 1. Alertas Críticos de Faltas
 st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas)")
 alertas_ativos = False
 for aluno in st.session_state.alunos_db:
@@ -215,9 +196,7 @@ st.error(f"⚠️ ALERTA: A criança {aluno['nome']} ({aluno['turma']}) acumulou
 if not alertas_ativos:
 st.success("✅ Nenhuma evasão detectada.")
 st.divider()
-# Abas de Gestão Administrativa (CRUD)
 maba1, maba2, maba3 = st.tabs(["👥 Gerenciar Professores", "👶 Gerenciar Alunos", "📋 Histórico de Ocorrências"])
-# CRUD PROFESSORES
 with maba1:
 st.subheader("Gerenciamento de Funcionários")
 acao_p = st.radio("Operação (Professores):", ["Cadastrar Novo", "Editar Perfil", "Excluir Registro"], horizontal=True)
@@ -254,7 +233,6 @@ del st.session_state.professores_db[p_del]
 salvar_dados("db")
 st.success("Funcionário removido com sucesso!")
 st.rerun()
-# CRUD ALUNOS
 with maba2:
 st.subheader("Gerenciamento do Carômetro de Alunos")
 acao_a = st.radio("Operação (Alunos):", ["Cadastrar Novo Aluno", "Editar Ficha de Saúde", "Excluir Aluno"], horizontal=True)
@@ -286,7 +264,7 @@ contato_ae = st.text_input("Contatos:", value=aluno_e['contato'])
 if st.form_submit_button("💾 Salvar Alterações na Ficha"):
 st.session_state.alunos_db[a_sel_idx] = {"id": aluno_e['id'], "nome": nome_ae, "turma": turma_ae, "alergias": alergias_ae, "restricoes": rest_ae, "retirada": retirada_ae, "contato": contato_ae, "foto": aluno_e['foto'], "faltas_consecutivas": aluno_e['faltas_consecutivas']}
 salvar_dados("alunos")
-st.success("Ficha updated!")
+st.success("Ficha atualizada!")
 st.rerun()
 elif acao_a == "Excluir Aluno":
 a_del_idx = st.selectbox("Selecione o Aluno para Remover:", range(len(st.session_state.alunos_db)), format_func=lambda x: f"{st.session_state.alunos_db[x]['nome']} ({st.session_state.alunos_db[x]['turma']})")
@@ -296,7 +274,6 @@ st.session_state.alunos_db.pop(a_del_idx)
 salvar_dados("alunos")
 st.success(f"{nome_removido} removido do sistema!")
 st.rerun()
-# HISTÓRICO DE OCORRÊNCIAS
 with maba3:
 st.subheader("📋 Histórico Recente de Ocorrências")
 if st.session_state.get('ocorrencias_salvas'):
@@ -308,6 +285,4 @@ else:
 st.write("Nenhuma ocorrência registrada.")
 else:
 st.title("🧸 Portal de Gestão da Educação Infantil")
-st.info("Insira seu código de acesso ou matrícula na barra lateral esquerda para prosseguir.")
-
 st.info("Insira seu código de acesso ou matrícula na barra lateral esquerda para prosseguir.")
