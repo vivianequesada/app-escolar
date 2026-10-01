@@ -329,7 +329,7 @@ if usuario:
                         salvar_dados("db")
                         st.success("Funcionário removido com sucesso!")
                         st.rerun()
-                   with maba2:
+            with maba2:
             st.subheader("Gerenciamento do Carômetro de Alunos")
             acao_a = st.radio("Operação (Alunos):", ["Cadastrar Novo Aluno", "Editar Ficha de Saúde & Terapias", "Excluir Aluno"], horizontal=True)
             
