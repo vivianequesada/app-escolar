@@ -1,3 +1,5 @@
+import os; os.system("pip install reportlab")
+
 import streamlit as st
 import json
 import os
