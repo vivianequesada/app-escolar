@@ -326,7 +326,7 @@ if usuario:
                     nome_p = st.text_input("Nome Completo:")
                     cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
                     turma_p = st.selectbox("Turma Atribuída:", TURMAS_ESCOLARES)
-                                       email_e = st.text_input("Alterar E-mail:", value=st.session_state.professores_db[p_sel].get('email',''))
+                    email_e = st.text_input("Alterar E-mail:", value=st.session_state.professores_db[p_sel].get('email',''))
                     if st.form_submit_button("💾 Atualizar Dados"):
                         st.session_state.professores_db[p_sel] = {"nome": nome_e, "cargo": cargo_e, "turma": turma_e, "email": email_e}
                         salvar_dados("db")
