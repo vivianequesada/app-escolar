@@ -330,3 +330,75 @@ if usuario:
                         st.success("Funcionário removido com sucesso!")
                         st.rerun()        
                         
+        with maba2:
+            st.subheader("Gerenciamento do Carômetro de Alunos")
+            acao_a = st.radio("Operação (Alunos):", ["Cadastrar Novo Aluno", "Editar Ficha de Saúde & Terapias", "Excluir Aluno"], horizontal=True)
+            
+            if acao_a == "Cadastrar Novo Aluno":
+                with st.form("add_aluno", clear_on_submit=True):
+                    nome_n = st.text_input("Nome Completo do Aluno:")
+                    turma_n = st.selectbox("Turma Escolar:", TURMAS_ESCOLARES)
+                    alergias_n = st.text_input("Alergias Clínicas / Restrições Médicas:", value="Nenhuma")
+                    rest_n = st.text_input("Restrições Alimentares (Ex: Lactose, Glúten):", value="Nenhuma")
+                    retirada_n = st.text_input("Autorizados para Retirada (Nome Completo/Parentesco):")
+                    contato_n = st.text_input("Contatos de Emergência (Telefone dos Pais):")
+                    terapias_n = st.text_input("Faz terapias externas? Se sim, quais (Ex: Fono, TO):", value="Nenhuma")
+                    horario_t = st.text_input("Dias e Horários das Terapias Clínicas:", value="Não informado")
+                    
+                    if st.form_submit_button("➕ Registrar Matrícula"):
+                        if nome_n:
+                            novo_a = {
+                                "id": str(len(st.session_state.alunos_db) + 1),
+                                "nome": nome_n,
+                                "turma": turma_n,
+                                "alergias": alergias_n,
+                                "restricoes": rest_n,
+                                "retirada": retirada_n,
+                                "contato": contato_n,
+                                "historico_aee": [],
+                                "encaminhamentos": "Nenhum lançado",
+                                "terapias": terapias_n,
+                                "dias_horarios_terapias": horario_t,
+                                "foto": "👶",
+                                "faltas_consecutivas": 0
+                            }
+                            st.session_state.alunos_db.append(novo_a)
+                            salvar_dados("alunos")
+                            st.success(f"Ficha escolar e matrícula de {nome_n} salvas com sucesso!")
+                            st.rerun()
+                        else:
+                            st.error("Por favor, digite o nome completo do aluno para matricular.")
+                            
+            elif acao_a == "Editar Ficha de Saúde & Terapias":
+                a_sel_idx = st.selectbox("Selecione a Criança para Modificar:", range(len(st.session_state.alunos_db)), format_func=lambda x: st.session_state.alunos_db[x]['nome'])
+                aluno_e = st.session_state.alunos_db[a_sel_idx]
+                with st.form("edit_aluno"):
+                    nome_ae = st.text_input("Nome do Aluno:", value=aluno_e['nome'])
+                    turma_ae = st.selectbox("Turma Escolar:", TURMAS_ESCOLARES, index=TURMAS_ESCOLARES.index(aluno_e['turma']) if aluno_e['turma'] in TURMAS_ESCOLARES else 0)
+                    alergias_ae = st.text_input("Alergias:", value=aluno_e['alergias'])
+                    rest_ae = st.text_input("Restrições Alimentares:", value=aluno_e['restricoes'])
+                    retirada_ae = st.text_input("Permissões de Retirada:", value=aluno_e['retirada'])
+                    contato_ae = st.text_input("Contatos:", value=aluno_e['contato'])
+                    encam_ae = st.text_area("Encaminhamentos Clínicos/Pedagógicos:", value=aluno_e.get('encaminhamentos', ''))
+                    ter_ae = st.text_input("Terapias Externas Ativas:", value=aluno_e.get('terapias', ''))
+                    hor_ae = st.text_input("Dias e Horários das Terapias:", value=aluno_e.get('dias_horarios_terapias', ''))
+                    
+                    if st.form_submit_button("💾 Salvar Alterações Globais"):
+                        st.session_state.alunos_db[a_sel_idx] = {
+                            "id": aluno_e['id'], "nome": nome_ae, "turma": turma_ae, "alergias": allergies_ae if 'allergies_ae' in locals() else alergias_ae, 
+                            "restricoes": rest_ae, "retirada": retirada_ae, "contato": contato_ae, 
+                            "historico_aee": aluno_e.get('historico_aee', []), "encaminhamentos": encam_ae, "terapias": ter_ae, 
+                            "dias_horarios_terapias": hor_ae, "foto": aluno_e['foto'], "faltas_consecutivas": aluno_e['faltas_consecutivas']
+                        }
+                        salvar_dados("alunos")
+                        st.success("Ficha escolar atualizada com sucesso pela direção!")
+                        st.rerun()
+                        
+            elif acao_a == "Excluir Aluno":
+                a_del_idx = st.selectbox("Selecione o Aluno para Remover do Sistema:", range(len(st.session_state.alunos_db)), format_func=lambda x: f"{st.session_state.alunos_db[x]['nome']} ({st.session_state.alunos_db[x]['turma']})")
+                if st.button("❌ Confirmar Exclusão do Aluno"):
+                    nome_removido = st.session_state.alunos_db[a_del_idx]['nome']
+                    st.session_state.alunos_db.pop(a_del_idx)
+                    salvar_dados("alunos")
+                    st.success(f"Aluno {nome_removido} foi removido do sistema escolar.")
+                    st.rerun()
