@@ -171,6 +171,7 @@ if matricula in st.session_state.professores_db:
                     {ultima_ata['conteudo']}
                 </div>
                 """, unsafe_allow_html=True)
+                
                 for p_id, p_info in st.session_state.professores_db.items():
                     if p_info['cargo'] == "Professor Regular":
 st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
