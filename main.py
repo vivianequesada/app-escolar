@@ -88,7 +88,9 @@ if matricula in st.session_state.professores_db:
     st.title("🧸 Portal de Gestão da Educação Infantil")
     st.divider()
 
-    # Perfil: Monitores
+    # =====================================================================
+    # PERFIL: MONITORES
+    # =====================================================================
     if usuario['cargo'] == "Monitor":
         st.header("🚨 Carômetro de Segurança Escolar (Acesso Rápido)")
         busca = st.text_input("🔍 Buscar Criança pelo Nome:")
@@ -104,14 +106,21 @@ if matricula in st.session_state.professores_db:
                         st.markdown(f"🪪 **Autorização de Retirada:** {aluno['retirada']}")
                         st.markdown(f"📞 **Telefones de Contato:** {aluno['contato']}")
 
-    # Perfil: Professor Regular
+    # =====================================================================
+    # PERFIL: PROFESSOR REGULAR (Reestruturado sem Tabs para Evitar Erros)
+    # =====================================================================
     elif usuario['cargo'] == "Professor Regular":
-        aba1, aba2, aba3, aba4, aba5 = st.tabs(["📝 Diário & Chamada", "📅 Planejamento", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos"])
-        
-        with aba1:
+        st.subheader(f"Sala Virtual: {usuario['turma']}")
+        menu_professor = st.selectbox(
+            "Selecione o Módulo de Trabalho:",
+            ["📝 Diário & Chamada", "📅 Planejamento BNCC", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos"]
+        )
+        st.write("---")
+
+        alunos_turma = [a for a in st.session_state.alunos_db if a['turma'] == usuario['turma']]
+
+        if menu_professor == "📝 Diário & Chamada":
             st.header("📋 Chamada Diária e Controle de Frequência")
-            alunos_turma = [a for a in st.session_state.alunos_db if a['turma'] == usuario['turma']]
-            
             with st.form("form_chamada"):
                 lista_presenca = {}
                 for aluno in alunos_turma:
@@ -125,10 +134,10 @@ if matricula in st.session_state.professores_db:
                             else:
                                 aluno['faltas_consecutivas'] += 1
                     salvar_dados("alunos")
-                    st.success("Frequência registrada!")
+                    st.success("Frequência registrada com sucesso!")
                     st.rerun()
 
-        with aba2:
+        elif menu_professor == "📅 Planejamento BNCC":
             st.header("Planejamento Pedagógico Quinzenal")
             with st.form("form_regular", clear_on_submit=True):
                 mes = st.selectbox("Mês", ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"])
@@ -137,9 +146,9 @@ if matricula in st.session_state.professores_db:
                 atividades = st.text_area("Descrição das Vivências e Brincadeiras:")
                 if st.form_submit_button("💾 Salvar Planejamento"):
                     salvar_dados("plan", {"professor": usuario['nome'], "tipo": "Regular", "mes": mes, "quinzena": quinzena, "atividades": atividades, "campos": campos_experiencia})
-                    st.success("Planejamento salvo!")
+                    st.success("Planejamento salvo com sucesso!")
 
-        with aba3:
+        elif menu_professor == "👶 Ocorrências da Rotina":
             st.header("🚨 Livro de Ocorrências Diárias")
             with st.form("form_ocorrencia", clear_on_submit=True):
                 aluno_ocorrencia = st.selectbox("Criança envolvida:", [a['nome'] for a in alunos_turma])
@@ -148,50 +157,56 @@ if matricula in st.session_state.professores_db:
                 detalhes = st.text_area("Descrição detalhada:")
                 if st.form_submit_button("💾 Registrar Ocorrência"):
                     salvar_dados("ocorrencias", {"professor": usuario['nome'], "aluno": aluno_ocorrencia, "tipo": tipo_ocorrencia, "gravidade": gravidade, "detalhes": detalhes})
-                    st.success("Ocorrência registrada!")
+                    st.success("Ocorrência registrada no sistema!")
 
-        with aba4:
+        elif menu_professor == "📊 Relatório Descritivo":
             st.header("📝 Relatório Descritivo de Desenvolvimento")
             aluno_sel = st.selectbox("Selecione a Criança para Parecer:", [a['nome'] for a in alunos_turma])
             with st.form("form_relatorio", clear_on_submit=True):
                 socializacao = st.text_area("Aspectos Sociais e Interação:")
                 cognitivo = st.text_area("Desenvolvimento Motor e Linguagem:")
                 if st.form_submit_button("💾 Salvar Parecer Pedagógico"):
-                    st.success(f"Relatório de {aluno_sel} arquivado!")
+                    st.success(f"Relatório de parecer descritivo de {aluno_sel} arquivado!")
 
-        with aba5:
+        elif menu_professor == "📋 Atas & Conselhos":
             st.header("Ata de Conselho de Classe")
             with st.form("form_ata", clear_on_submit=True):
                 trimestre = st.selectbox("Trimestre de Avaliação", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
-                deliberacoes = st.text_area("Parecer Coletivo:")
-                if st.form_submit_button("📝 Registrar e Gerar Folha"):
-                    salvar_dados("atas", {"trimestre": trimestre, "turma": usuario['turma'], "conteudo": deliberacoes, "emissor": usuario['nome']})
-                    st.success("Ata salva!")
+deliberacoes = st.text_area("Parecer Coletivo da Turma:")
+if st.form_submit_button("📝 Registrar e Gerar Folha"):
+salvar_dados("atas", {"trimestre": trimestre, "turma": usuario['turma'], "conteudo": deliberacoes, "emissor": usuario['nome']})
+st.success("Ata oficial gravada!")
+st.rerun()
+if st.session_state.atas_salvas:
+st.divider()
+ultima_ata = st.session_state.atas_salvas[-1]
+st.markdown(f"""
 
-            if st.session_state.atas_salvas:
-                st.divider()
-                ultima_ata = st.session_state.atas_salvas[-1]
-                st.markdown(f"""
-                <div style="border: 2px solid #333; padding: 25px; background-color: #fff; color: #111; font-family: monospace; margin-bottom: 20px;">
 ATA OFICIAL DE CONSELHO
 {ultima_ata['trimestre'].upper()} | TURMA: {ultima_ata['turma'].upper()}
+
+
 {ultima_ata['conteudo']}
 
 """, unsafe_allow_html=True)
+st.write("Assinaturas Interativas:")
 for p_id, p_info in st.session_state.professores_db.items():
 if p_info['cargo'] == "Professor Regular":
 st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
-st.markdown("", unsafe_allow_html=True)
-# Perfil: Professor AEE
+# =====================================================================
+# PERFIL: PROFESSOR AEE
+# =====================================================================
 elif usuario['cargo'] == "Professor AEE":
 st.header("🧩 Planejamento Individualizado por Aluno (AEE)")
 with st.form("form_aee", clear_on_submit=True):
 aluno_aee = st.selectbox("Criança Atendida:", [a['nome'] for a in st.session_state.alunos_db])
 objetivos = st.text_area("Objetivos de Flexibilização Curricular:")
-recursos = st.text_area("Resources Pedagógicos Utilizados:")
+recursos = st.text_area("Recursos Pedagógicos Utilizados:")
 if st.form_submit_button("💾 Salvar Planejamento AEE"):
-st.success("Planejamento gravado!")
-# Perfil: Administrador
+st.success("Planejamento AEE gravado com sucesso!")
+# =====================================================================
+# PERFIL: ADMINISTRADOR
+# =====================================================================
 elif usuario['cargo'] == "Administrador":
 st.header("⚙️ Painel de Controle da Direção e Coordenação")
 st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas)")
@@ -201,7 +216,7 @@ if aluno['faltas_consecutivas'] >= 3:
 alertas_ativos = True
 st.error(f"⚠️ ALERTA: A criança {aluno['nome']} ({aluno['turma']}) acumulou {aluno['faltas_consecutivas']} faltas seguidas. Contato: {aluno['contato']}")
 if not alertas_ativos:
-st.success("✅ Nenhuma evasão detectada.")
+st.success("✅ Nenhuma evasão ou abandono de vaga detectado.")
 st.divider()
 maba1, maba2, maba3 = st.tabs(["👥 Gerenciar Professores", "👶 Gerenciar Alunos", "📋 Histórico de Ocorrências"])
 with maba1:
@@ -228,7 +243,7 @@ turma_e = st.selectbox("Alterar Turma:", ["Berçário", "Maternal I", "Maternal 
 if st.form_submit_button("💾 Atualizar Dados"):
 st.session_state.professores_db[p_sel] = {"nome": nome_e, "cargo": cargo_e, "turma": turma_e}
 salvar_dados("db")
-st.success("Dados atualizados!")
+st.success("Dados de cadastro atualizados!")
 st.rerun()
 elif acao_p == "Excluir Registro":
 p_del = st.selectbox("Selecione para Deletar:", list(st.session_state.professores_db.keys()), format_func=lambda x: f"{st.session_state.professores_db[x]['nome']} ({x})")
@@ -271,7 +286,7 @@ contato_ae = st.text_input("Contatos:", value=aluno_e['contato'])
 if st.form_submit_button("💾 Salvar Alterações na Ficha"):
 st.session_state.alunos_db[a_sel_idx] = {"id": aluno_e['id'], "nome": nome_ae, "turma": turma_ae, "alergias": alergias_ae, "restricoes": rest_ae, "retirada": retirada_ae, "contato": contato_ae, "foto": aluno_e['foto'], "faltas_consecutivas": aluno_e['faltas_consecutivas']}
 salvar_dados("alunos")
-st.success("Ficha atualizada!")
+st.success("Ficha atualizada com sucesso!")
 st.rerun()
 elif acao_a == "Excluir Aluno":
 a_del_idx = st.selectbox("Selecione o Aluno para Remover:", range(len(st.session_state.alunos_db)), format_func=lambda x: f"{st.session_state.alunos_db[x]['nome']} ({st.session_state.alunos_db[x]['turma']})")
@@ -279,7 +294,7 @@ if st.button("❌ Confirmar Exclusão do Aluno"):
 nome_removido = st.session_state.alunos_db[a_del_idx]['nome']
 st.session_state.alunos_db.pop(a_del_idx)
 salvar_dados("alunos")
-st.success(f"{nome_removido} removido do sistema!")
+st.success(f"{nome_removido} removido do sistema escolar!")
 st.rerun()
 with maba3:
 st.subheader("📋 Histórico Recente de Ocorrências")
@@ -289,7 +304,7 @@ with st.expander(f"📌 {oc['tipo']} - {oc['aluno']}"):
 st.write(f"Relator: {oc['professor']} | Gravidade: {oc['gravidade']}")
 st.info(f"Detalhes: {oc['detalhes']}")
 else:
-st.write("Nenhuma ocorrência registrada.")
+st.write("Nenhuma ocorrência registrada até o momento.")
 else:
 st.title("🧸 Portal de Gestão da Educação Infantil")
 st.info("Insira seu código de acesso ou matrícula na barra lateral esquerda para prosseguir.")
