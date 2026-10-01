@@ -309,7 +309,7 @@ if usuario:
                 with st.form("edit_prof"):
                     nome_e = st.text_input("Alterar Nome:", value=st.session_state.professores_db[p_sel]['nome'])
                     cargo_e = st.selectbox("Alterar Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"], index=["Professor Regular", "Professor AEE", "Monitor", "Administrador"].index(st.session_state.professores_db[p_sel]['cargo']))
-                                     turma_atual = st.session_state.professores_db[p_sel]['turma']
+                    turma_atual = st.session_state.professores_db[p_sel]['turma']
                  idx_turma = TURMAS_ESCOLARES.index(turma_atual) if turma_atual in TURMAS_ESCOLARES else 0
                  turma_e = st.selectbox("Alterar Turma:", TURMAS_ESCOLARES, index=idx_turma)
 
