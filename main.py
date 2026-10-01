@@ -4,9 +4,9 @@ import os
 import io
 from datetime import date
 
-# Importações obrigatórias para geração de PDFs oficiais
+# Importações obrigatórias para a geração dos arquivos em PDF
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
@@ -45,7 +45,6 @@ def gerar_pdf_escolar(titulo_doc, subtitulo, dados_materias, assinaturas):
     story = []
     styles = getSampleStyleSheet()
     
-    # Estilização do PDF para Impressão
     estilo_titulo = ParagraphStyle('Titulo', parent=styles['Heading1'], fontSize=16, leading=22, alignment=1, spaceAfter=10)
     estilo_sub = ParagraphStyle('Subtitulo', parent=styles['Heading3'], fontSize=11, leading=15, alignment=1, spaceAfter=20)
     estilo_materia = ParagraphStyle('Materia', parent=styles['Heading2'], fontSize=12, leading=16, spaceBefore=10, spaceAfter=5, textColor=colors.HexColor("#2C3E50"))
@@ -56,7 +55,6 @@ def gerar_pdf_escolar(titulo_doc, subtitulo, dados_materias, assinaturas):
     story.append(Paragraph(subtitulo, estilo_sub))
     story.append(Spacer(1, 10))
     
-    # Adiciona as seções de cada matéria separada no PDF
     for mat, conteudo in dados_materias.items():
         story.append(Paragraph(f"<b>{mat.upper()}</b>", estilo_materia))
         story.append(Paragraph(conteudo if conteudo.strip() else "Nenhuma deliberação registrada para este componente.", estilo_corpo))
@@ -65,7 +63,6 @@ def gerar_pdf_escolar(titulo_doc, subtitulo, dados_materias, assinaturas):
     story.append(Spacer(1, 15))
     story.append(Paragraph("<b>ASSINATURAS DOS PROFESSORES INTEGRADOS:</b>", estilo_corpo))
     
-    # Cria as linhas de assinatura físicas no arquivo PDF
     for ass in assinaturas:
         story.append(Paragraph(f"✍️ {ass} ____________________________________", estilo_assinatura))
         
@@ -115,8 +112,7 @@ def carregar_dados():
                 "id": "1", "nome": "Arthur Silva", "turma": "Maternal I", 
                 "alergias": "Frutos do mar", "restricoes": "Intolerante a Lactose", 
                 "retirada": "Pais (Marcos e Ana)", "contato": "(11) 98888-7777", 
-                "historico_aee": [],
-                "encaminhamentos": "Encaminhado para fonoaudiologia em Março/2026.",
+                "historico_aee": [], "encaminhamentos": "Nenhum lançado",
                 "terapias": "Terapia Ocupacional e Fonoaudiologia",
                 "dias_horarios_terapias": "Terças e Quintas às 14:00",
                 "foto": "👶", "faltas_consecutivas": 0
@@ -196,11 +192,10 @@ if usuario:
         if menu_prof == "📝 Diário & Chamada":
             st.header("📋 Chamada Diária e Controle de Frequência")
             with st.form("form_chamada"):
-            # Continuação do Diário & Chamada (Professor Regular)
-            lista_presenca = {}
-            for aluno in alunos_turma:
-                lista_presenca[aluno['id']] = st.checkbox(f"👤 {aluno['nome']}", value=True)
-            if st.form_submit_button("✅ Registrar Frequência"):
+                lista_presenca = {}
+                for aluno in alunos_turma:
+                    lista_presenca[aluno['id']] = st.checkbox(f"👤 {aluno['nome']}", value=True)
+                if st.form_submit_button("✅ Registrar Frequência"):
                 for aluno in st.session_state.alunos_db:
                     if aluno['id'] in lista_presenca:
                         if lista_presenca[aluno['id']]:
@@ -336,7 +331,6 @@ if usuario:
     elif usuario['cargo'] == "Administrador":
         st.header("⚙️ Painel de Controle da Direção e Coordenação")
         
-        # 1. ALERTA DE EVASÃO AUTOMÁTICO EXIGIDO POR VOCÊ
         st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas >= 3)")
         alertas_ativos = False
         for aluno in st.session_state.alunos_db:
@@ -344,18 +338,16 @@ if usuario:
                 alertas_ativos = True
                 st.error(f"⚠️ RISCO DE EVASÃO DETECTADO: A criança {aluno['nome']} ({aluno['turma']}) acumulou {aluno['faltas_consecutivas']} faltas consecutivas! Contato dos pais para busca ativa: {aluno['contato']}")
         if not alertas_ativos:
-            st.success("✅ Nenhuma evasão detectada nas turmas de Educação Infantil.")
-        st.divider()
-        
-        maba1, maba2, maba3, maba4 = st.tabs(["👥 Gerenciar Professores", "👶 Matricular Alunos", "📅 Ver Planejamentos", "📋 Histórico de Ocorrências"])
-        
-        with maba1:
-            st.subheader("Gerenciamento de Funcionários")
-            acao_p = st.radio("Operação (Professores):", ["Cadastrar Novo", "Editar Perfil", "Excluir Registro"], horizontal=True)
-            if acao_p == "Cadastrar Novo":
-                with st.form("add_prof", clear_on_submit=True):
-                    mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
-                    nome_p = st.text_input("Nome Completo:")
-                    cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
-                    turma_p = st.selectbox("Turma Atribuída:", TURMAS_ESCOLARES)
-                    email_p = st.text_input("E-mail corporativo:")
+st.success("✅ Nenhuma evasão detectada nas turmas de Educação Infantil.")
+st.divider()
+maba1, maba2, maba3, maba4 = st.tabs(["👥 Gerenciar Professores", "👶 Matricular Alunos", "📅 Ver Planejamentos", "📋 Histórico de Ocorrências"])
+with maba1:
+st.subheader("Gerenciamento de Funcionários")
+acao_p = st.radio("Operação (Professores):", ["Cadastrar Novo", "Editar Perfil", "Excluir Registro"], horizontal=True)
+if acao_p == "Cadastrar Novo":
+with st.form("add_prof", clear_on_submit=True):
+mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
+nome_p = st.text_input("Nome Completo:")
+cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
+turma_p = st.selectbox("Turma Atribuída:", TURMAS_ESCOLARES)
+email_p = st.text_input("E-mail corporativo:")
