@@ -1,16 +1,7 @@
-import os; os.system("pip install reportlab")
-
 import streamlit as st
 import json
 import os
-import io
 from datetime import date
-
-# Importações obrigatórias para a geração dos arquivos em PDF via ReportLab
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 
 # =====================================================================
 # 1. CONFIGURAÇÃO DA PÁGINA (Deve ser o primeiro comando Streamlit)
@@ -39,63 +30,7 @@ MATERIAS_PEDAGOGICAS = [
 ]
 
 # =====================================================================
-# 2. SISTEMA DE GERAÇÃO DE ARQUIVOS PDF (REPORTLAB)
-# =====================================================================
-def gerar_pdf_escolar(titulo_doc, subtitulo, dados_materias, assinaturas):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=50, leftMargin=50, topMargin=50, bottomMargin=50)
-    story = []
-    styles = getSampleStyleSheet()
-    
-    estilo_titulo = ParagraphStyle('Titulo', parent=styles['Heading1'], fontSize=16, leading=22, alignment=1, spaceAfter=10)
-    estilo_sub = ParagraphStyle('Subtitulo', parent=styles['Heading3'], fontSize=11, leading=15, alignment=1, spaceAfter=20)
-    estilo_materia = ParagraphStyle('Materia', parent=styles['Heading2'], fontSize=12, leading=16, spaceBefore=10, spaceAfter=5, textColor=colors.HexColor("#2C3E50"))
-    estilo_corpo = ParagraphStyle('Corpo', parent=styles['Normal'], fontSize=10, leading=14, spaceAfter=10)
-    estilo_assinatura = ParagraphStyle('Assinatura', parent=styles['Normal'], fontSize=10, leading=18, spaceBefore=15)
-    
-    story.append(Paragraph(f"<b>{titulo_doc}</b>", estilo_titulo))
-    story.append(Paragraph(subtitulo, estilo_sub))
-    story.append(Spacer(1, 10))
-    
-    for mat, conteudo in dados_materias.items():
-        story.append(Paragraph(f"<b>{mat.upper()}</b>", estilo_materia))
-        story.append(Paragraph(conteudo if conteudo.strip() else "Nenhuma deliberação registrada para este componente.", estilo_corpo))
-        story.append(Spacer(1, 5))
-        
-    story.append(Spacer(1, 15))
-    story.append(Paragraph("<b>ASSINATURAS DOS PROFESSORES INTEGRADOS:</b>", estilo_corpo))
-    
-    for ass in assinaturas:
-        story.append(Paragraph(f"✍️ {ass} ____________________________________", estilo_assinatura))
-        
-    doc.build(story)
-    buffer.seek(0)
-    return buffer.getvalue()
-
-def gerar_pdf_pei(titulo_doc, subtitulo, texto_corpo):
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=50, leftMargin=50, topMargin=50, bottomMargin=50)
-    story = []
-    styles = getSampleStyleSheet()
-    
-    estilo_titulo = ParagraphStyle('Titulo', parent=styles['Heading1'], fontSize=15, leading=20, alignment=1, spaceAfter=15)
-    estilo_sub = ParagraphStyle('Subtitulo', parent=styles['Heading3'], fontSize=11, leading=15, alignment=1, spaceAfter=20)
-    estilo_corpo = ParagraphStyle('Corpo', parent=styles['Normal'], fontSize=10, leading=15, spaceAfter=10)
-    
-    story.append(Paragraph(f"<b>{titulo_doc}</b>", estilo_titulo))
-    story.append(Paragraph(subtitulo, estilo_sub))
-    story.append(Spacer(1, 10))
-    
-    for linha in texto_corpo.split('\n'):
-        if linha.strip():
-            story.append(Paragraph(linha, estilo_corpo))
-            
-    doc.build(story)
-    buffer.seek(0)
-    return buffer.getvalue()
-
-# =====================================================================
-# 3. CARGA E PERSISTÊNCIA DE DADOS (JSON)
+# 2. CARGA E PERSISTÊNCIA DE DADOS (JSON)
 # =====================================================================
 def carregar_dados():
     if not os.path.exists(DB_FILE):
@@ -152,7 +87,7 @@ def salvar_dados(chave, payload=None):
 carregar_dados()
 
 # =====================================================================
-# 4. LOGIN NA BARRA LATERAL
+# 3. LOGIN NA BARRA LATERAL
 # =====================================================================
 st.sidebar.title("🔐 Acesso ao Painel")
 matricula = st.sidebar.text_input("Matrícula", type="password")
@@ -166,7 +101,7 @@ elif matricula:
     st.sidebar.error("Matrícula incorreta.")
 
 # =====================================================================
-# 5. EXECUÇÃO DE TELAS POR PERFIL
+# 4. EXECUÇÃO DE TELAS POR PERFIL
 # =====================================================================
 if usuario:
     st.title("🧸 Portal de Gestão da Educação Infantil")
@@ -217,7 +152,7 @@ if usuario:
                 materia = st.selectbox("Componente Curricular / Matéria:", MATERIAS_PEDAGOGICAS)
                 atividades = st.text_area("Descrição Detalhada das Vivências Pedagógicas:")
                 if st.form_submit_button("💾 Salvar Planejamento"):
-                    salvar_dados("plan", {"professor": usuario['nome'], "turma": usuario['turma'], "mes": mes, "quinzena": quinzena, "materia": materia, "conteudo": atividades})
+                    salvar_dados("plan", {"professor": usuario['nome'], "turma": usuario['turma'], "mes": mes, "quinzena": quinzena, "materia": materia, "conteudo": activities})
                     st.success(f"Plano quinzenal salvo! Uma cópia de segurança foi enviada para seu e-mail: {usuario['email']}")
 
         elif menu_prof == "👶 Ocorrências da Rotina":
@@ -235,6 +170,7 @@ if usuario:
             st.header("📋 Lançamento de Ata de Conselho de Classe Estruturada")
             with st.form("form_ata_materias", clear_on_submit=True):
                 trimestre = st.selectbox("Trimestre Letivo:", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
+                
                 st.write("### Deliberações Separadas por Componente:")
                 d_verbal = st.text_area("1. Linguagem Verbal:")
                 d_mat = st.text_area("2. Linguagem Matemática:")
@@ -242,6 +178,7 @@ if usuario:
                 d_corp = st.text_area("4. Cultura, Corpo e Movimento:")
                 d_artes = st.text_area("5. Artes:")
                 d_aee = st.text_area("6. Flexibilizações AEE:")
+                
                 if st.form_submit_button("📝 Protocolar e Consolidar Ata"):
                     payload_ata = {
                         "trimestre": trimestre, "turma": usuario['turma'], "emissor": usuario['name'],
@@ -258,26 +195,25 @@ if usuario:
             if st.session_state.atas_salvas:
                 st.divider()
                 ultima = st.session_state.atas_salvas[-1]
-                st.html("<div style='border: 2px solid #333; padding: 25px; background-color: #fff; color: #111; font-family: monospace; text-align: center;'><h4>ATA DE CONSELHO GERAL CONSOLIDADA</h4></div>")
-                st.write(f"Período Escolar: {ultima['trimestre']} | Turma: {ultima['turma']} | Coordenador Resp: {ultima['emissor']}")
-                for mat, text in ultima["dados"].items():
-                    st.markdown(f"📌 {mat}:")
-                    st.info(text if text.strip() else "Sem apontamentos neste trimestre.")
                 
-                lista_profs_assinatura = []
+                # Montando o layout HTML pronto e limpo para o professor imprimir
+                html_ata = f"""
+                <div id="documento-ata" style="border: 2px solid #333; padding: 30px; background-color: #fff; color: #111; font-family: 'Courier New', monospace; max-width: 800px; margin: auto;">
+                    <h2 style="text-align: center; margin-bottom: 5px;">ATA DE CONSELHO DE CLASSE CONSOLIDADA</h2>
+                    <p style="text-align: center; font-size: 14px; margin-top: 0;"><b>{ultima['trimestre'].upper()}</b> | TURMA: {ultima['turma'].upper()}</p>
+                    <p style="font-size: 13px;"><b>Coordenador Responsável:</b> {ultima['emissor']}</p>
+                    <hr style="border-top: 1px solid #333;">
+                """
+                for mat, text in ultima["dados"].items():
+                    html_ata += f"<h4>📌 {mat.upper()}:</h4><p style='text-align: justify; font-size: 13px;'>{text if text.strip() else 'Sem apontamentos neste período.'}</p>"
+                
+                html_ata += "<br><hr style='border-top: 1px solid #333;'><h4>✍️ ASSINATURAS DOS PROFESSORES INTEGRADOS:</h4><br>"
                 for p_id, p_info in st.session_state.professores_db.items():
                     if p_info['cargo'] in ["Professor Regular", "Professor AEE"]:
-                        lista_profs_assinatura.append(f"{p_info['nome'].upper()} ({p_info['cargo']})")
+                        html_ata += f"<p style='font-size: 13px; margin-bottom: 25px;'>{p_info['nome'].upper()} ({p_info['cargo']}) ____________________________________</p>"
                 
-                titulo_ata = f"ATA DE CONSELHO DE CLASSE — {ultima['trimestre'].upper()}"
-                sub_ata = f"Turma: {ultima['turma']} | Gerado automaticamente pelo sistema em {date.today().strftime('%d/%m/%Y')}"
-                pdf_data = gerar_pdf_escolar(titulo_ata, sub_ata, ultima["dados"], lista_profs_assinatura)
-                st.download_button(
-                    label="📥 Baixar Ata de Conselho Consolidada em PDF",
-                    data=pdf_data,
-                    file_name=f"Ata_Conselho_{ultima['trimestre'].replace(' ', '_')}.pdf",
-                    mime="application/pdf"
-                )
+                html_ata += f"</div><br><div style='text-align: center;'><button onclick=" + '"' + "var win = window.open('', '_blank'); win.document.write(document.getElementById('documento-ata').outerHTML); win.document.close(); win.print();" + '"' + " style='padding: 10px 20px; font-size: 14px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;'>🖨️ Abrir Tela de Impressão (Salvar como PDF)</button></div>"
+                st.html(html_ata)
 
     # =====================================================================
     # PERFIL: PROFESSOR AEE
@@ -315,18 +251,22 @@ if usuario:
                         for idx, rel in enumerate(historico):
                             with st.container(border=True):
                                 st.markdown(f"##### {rel['periodo']} (Gravado em {rel['data_registro']})")
-                                st.write(f"Objetivos: {rel['objetivos']}")
-                                st.write(f"Recursos: {rel['recursos']}")
                                 
-                                texto_pei = f"Parecer Pedagógico Individualizado\n\nObjetivos e Adaptações:\n{rel['objetivos']}\n\nRecursos e Estratégias:\n{rel['recursos']}\n\nResponsável Técnico: {rel['professor']}"
-                                pdf_pei = gerar_pdf_pei(f"RELATÓRIO DE INCLUSÃO (PEI) — {a['nome'].upper()}", f"Período: {rel['periodo']} | Emitido em {rel['data_registro']}", texto_pei)
-                                st.download_button(
-                                    label="📄 Exportar Relatório em PDF",
-                                    data=pdf_pei,
-                                    file_name=f"PEI_{a['nome'].replace(' ', '')}{rel['periodo'].replace(' ', '')}.pdf",
-                                    mime="application/pdf",
-                                    key=f"pdf_aee{idx}"
-                                )
+                                html_pei = f"""
+                                <div id="doc-pei-{idx}" style="border: 1px solid #aaa; padding: 20px; background-color: #fff; color: #111; font-family: Arial, sans-serif; max-width: 750px; margin: auto;">
+                                    <h3 style="text-align: center;">PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI/PEI)</h3>
+                                    <p><b>Aluno:</b> {a['nome']} | <b>Turma:</b> {a['turma']}</p>
+                                    <p><b>Período:</b> {rel['periodo']} | <b>Data:</b> {rel['data_registro']}</p>
+                                    <hr>
+                                    <p><b>Objetivos e Adaptações:</b><br>{rel['objetivos']}</p>
+                                    <p><b>Recursos e Estratégias:</b><br>{rel['recursos']}</p>
+                                    <br><p><b>Responsável Técnico:</b> {rel['professor']} ___________________________</p>
+                                </div><br>
+                                <div style="text-align: center;">
+                                    <button onclick=" + '"' + f"var win = window.open('', '_blank'); win.document.write(document.getElementById('doc-pei-{idx}').outerHTML); win.document.close(); win.print();" + '"' + " style='padding: 6px 12px; font-size: 13px; background-color: #008CBA; color: white; border: none; border-radius: 4px; cursor: pointer;'>🖨️ Imprimir / Salvar em PDF</button>
+                                </div>
+                                """
+                                st.html(html_pei)
 
     # =====================================================================
     # PERFIL: ADMINISTRADOR (DIREÇÃO)
@@ -334,6 +274,7 @@ if usuario:
     elif usuario['cargo'] == "Administrador":
         st.header("⚙️ Painel de Controle da Direção e Coordenação")
         
+        # ALERTA DE EVASÃO AUTOMÁTICO EXIGIDO POR VOCÊ
         st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas >= 3)")
         alertas_ativos = False
         for aluno in st.session_state.alunos_db:
@@ -362,3 +303,35 @@ if usuario:
                             salvar_dados("db")
                             st.success(f"{nome_p} cadastrado!")
                             st.rerun()
+                            
+            elif acao_p == "Editar Perfil":
+                p_sel = st.selectbox("Selecione para Editar:", list(st.session_state.professores_db.keys()), format_func=lambda x: f"{st.session_state.professores_db[x]['nome']} ({x})")
+                with st.form("edit_prof"):
+                    nome_e = st.text_input("Alterar Nome:", value=st.session_state.professores_db[p_sel]['nome'])
+                    cargo_e = st.selectbox("Alterar Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"], index=["Professor Regular", "Professor AEE", "Monitor", "Administrador"].index(st.session_state.professores_db[p_sel]['cargo']))
+                    turma_e = st.selectbox("Alterar Turma:", TURMAS_ESCOLARES, value=st.session_state.professores_db[p_sel]['turma'])
+                    email_e = st.text_input("Alterar E-mail:", value=st.session_state.professores_db[p_sel].get('email',''))
+                    if st.form_submit_button("💾 Atualizar Dados"):
+                        st.session_state.professores_db[p_sel] = {"nome": nome_e, "cargo": cargo_e, "turma": turma_e, "email": email_e}
+                        salvar_dados("db")
+                        st.success("Dados atualizados!")
+                        st.rerun()
+                        
+            elif acao_p == "Excluir Registro":
+                p_del = st.selectbox("Selecione para Deletar:", list(st.session_state.professores_db.keys()), format_func=lambda x: f"{st.session_state.professores_db[x]['nome']} ({x})")
+                if st.button("❌ Confirmar Exclusão Definitiva"):
+                    if p_del == matricula: 
+                        st.error("Você não pode excluir a sua própria conta ativa.")
+                    else:
+                        del st.session_state.professores_db[p_del]
+                        salvar_dados("db")
+                        st.success("Funcionário removido com sucesso!")
+                        st.rerun()
+                        
+        with maba2:
+            st.subheader("Gerenciamento do Carômetro de Alunos")
+            acao_a = st.radio("Operação (Alunos):", ["Cadastrar Novo Aluno", "Editar Ficha de Saúde", "Excluir Aluno"], horizontal=True)
+            if acao_a == "Cadastrar Novo Aluno":
+                with st.form("add_aluno", clear_on_submit=True):
+                    nome_n = st.text_input("Nome Completo do Aluno:")
+                    turma_n = st.selectbox("Turma Escolar:", TURMAS_ESCOLARES)
