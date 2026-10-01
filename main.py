@@ -321,7 +321,7 @@ if usuario:
             st.subheader("Gerenciamento de Funcionários")
             acao_p = st.radio("Operação (Professores):", ["Cadastrar Novo", "Editar Perfil", "Excluir Registro"], horizontal=True)
             if acao_p == "Cadastrar Novo":
-                 with st.form("add_prof", clear_on_submit=True):
+                with st.form("add_prof", clear_on_submit=True):
                     mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
                     nome_p = st.text_input("Nome Completo:")
                     cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
