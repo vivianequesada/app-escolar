@@ -219,7 +219,7 @@ if matricula in st.session_state.professores_db:
                     mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
                     nome_p = st.text_input("Nome Completo:")
                     cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
-                    turma_p = st.selectbox("Turma Atribuída:", ["Berçário", "Maternal I", "Maternal II", "Pré I", "Pré II", "Geral"])
+                    turma_p = st.selectbox("Turma Atribuída:", ["Berçário", "Maternal I", "Maternal II - 1", "Maternal II - 2", "1ª Etapa -1"," 1ª Etapa - 2", "2ª Etapa - 1","2ª Etapa - 2", "Geral"])
                     if st.form_submit_button("➕ Salvar Funcionário"):
                         if mat_n and nome_p:
                             st.session_state.professores_db[mat_n] = {"nome": nome_p, "cargo": cargo_p, "turma": turma_p}
