@@ -103,7 +103,8 @@ if matricula in st.session_state.professores_db:
                menu_professor = st.selectbox(
             "Selecione o Módulo de Trabalho:",
             ["📝 Diário & Chamada", "📅 Planejamento BNCC", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos", "🏢 Agendamento de Espaços", "📅 Calendário de Avaliações", "📢 Quadro de Avisos"]
-        )        elif menu_professor == "🏢 Agendamento de Espaços":
+        )        
+    elif menu_professor == "🏢 Agendamento de Espaços":
             st.header("🏢 Agendamento de Espaços Coletivos")
             st.caption("O sistema gerencia o uso dos ambientes compartilhados da escola.")
             
