@@ -2,7 +2,7 @@ import streamlit as st
 import json
 import os
 
-# CONFIGURAÇÃO DA PÁGINA (Deve ser o primeiro comando)
+# CONFIGURAÇÃO DA PÁGINA (Deve ser o primeiro comando Streamlit)
 st.set_page_config(page_title="Gestão Escolar - Educação Infantil", layout="wide", page_icon="🧸")
 
 # BANCOS DE DADOS EM FORMATO JSON
@@ -170,14 +170,16 @@ if matricula in st.session_state.professores_db:
             if st.session_state.atas_salvas:
                 st.divider()
                 ultima_ata = st.session_state.atas_salvas[-1]
-                st.markdown(f"""
-                <div style="border: 2px solid #333; padding: 25px; background-color: #fff; color: #111; font-family: monospace; margin-bottom: 20px;">
-                    <h4 style="text-align: center;">ATA OFICIAL DE CONSELHO</h4>
-                # Continuação do bloco da Ata de Conselho
-                st.write("**Assinaturas Interativas:**")
+                
+                # Substituído markdown com aspas triplas por st.html para eliminar o SyntaxError definitivamente
+                # Bloco final da Ata de Conselho
+                st.html("<div style='border: 2px solid #333; padding: 25px; background-color: #fff; color: #111; font-family: monospace; margin-bottom: 20px;'><h4 style='text-align: center;'>ATA OFICIAL DE CONSELHO</h4></div>")
+                st.write(f"Trimestre: {ultima_ata['trimestre'].upper()} | Turma: {ultima_ata['turma'].upper()}")
+                st.info(ultima_ata['conteudo'])
+                st.write("Assinaturas Interativas:")
                 for p_id, p_info in st.session_state.professores_db.items():
                     if p_info['cargo'] == "Professor Regular":
-                        st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
+                        st.write(f"✍️ {p_info['nome'].upper()} ________________________")
 
     # =====================================================================
     # PERFIL: PROFESSOR AEE
@@ -196,14 +198,13 @@ if matricula in st.session_state.professores_db:
     # =====================================================================
     elif usuario['cargo'] == "Administrador":
         st.header("⚙️ Painel de Controle da Direção e Coordenação")
-        
         st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas)")
         alertas_ativos = False
         for aluno in st.session_state.alunos_db:
             if aluno['faltas_consecutivas'] >= 3:
                 alertas_ativos = True
                 st.error(f"⚠️ ALERTA: A criança {aluno['nome']} ({aluno['turma']}) acumulou {aluno['faltas_consecutivas']} faltas seguidas. Contato: {aluno['contato']}")
-        if not alertas_ativos: 
+        if not alertas_ativos:
             st.success("✅ Nenhuma evasão ou abandono de vaga detectado.")
             
         st.divider()
@@ -280,9 +281,9 @@ if matricula in st.session_state.professores_db:
                     retirada_ae = st.text_input("Retirada:", value=aluno_e['retirada'])
                     contato_ae = st.text_input("Contatos:", value=aluno_e['contato'])
                     if st.form_submit_button("💾 Salvar Alterações na Ficha"):
-                        st.session_state.alunos_db[a_sel_idx] = {"id": aluno_e['id'], "nome": nome_ae, "turma": turma_ae, "alergias": alergias_ae, "restricoes": rest_ae, "retirada": retirada_ae, "contato": contact_ae, "foto": aluno_e['foto'], "faltas_consecutivas": aluno_e['faltas_consecutivas']}
+                        st.session_state.alunos_db[a_sel_idx] = {"id": aluno_e['id'], "nome": nome_ae, "turma": turma_ae, "alergias": alergias_ae, "restricoes": rest_ae, "retirada": retirada_ae, "contato": contato_ae, "foto": aluno_e['foto'], "faltas_consecutivas": aluno_e['faltas_consecutivas']}
                         salvar_dados("alunos")
-                        st.success("Ficha atualizada!")
+                        st.success("Ficha updated!")
                         st.rerun()
                         
             elif acao_a == "Excluir Aluno":
