@@ -2,7 +2,9 @@ import streamlit as st
 import json
 import os
 
-# CONFIGURAÇÃO DA PÁGINA
+# =====================================================================
+# CONFIGURAÇÃO DA PÁGINA (Deve ser o primeiro comando Streamlit)
+# =====================================================================
 st.set_page_config(page_title="Gestão Escolar - Educação Infantil", layout="wide", page_icon="🧸")
 
 # BANCOS DE DADOS EM FORMATO JSON
@@ -12,6 +14,9 @@ PLAN_FILE = "planejamentos_db.json"
 ALUNOS_FILE = "alunos_db.json"
 OCORRENCIAS_FILE = "ocorrencias_db.json"
 
+# =====================================================================
+# FUNÇÕES DE BANCO DE DADOS (CARREGAR E SALVAR)
+# =====================================================================
 def carregar_dados():
     if not os.path.exists(DB_FILE):
         default_profs = {
@@ -69,7 +74,9 @@ def salvar_dados(chave, payload=None):
 
 carregar_dados()
 
+# =====================================================================
 # LOGIN NA BARRA LATERAL
+# =====================================================================
 st.sidebar.title("🔐 Acesso ao Painel")
 matricula = st.sidebar.text_input("Matrícula", type="password")
 
@@ -81,7 +88,7 @@ if matricula in st.session_state.professores_db:
     st.title("🧸 Portal de Gestão da Educação Infantil")
     st.divider()
 
-    # PERFIL: MONITORES
+    # Perfil: Monitores
     if usuario['cargo'] == "Monitor":
         st.header("🚨 Carômetro de Segurança Escolar (Acesso Rápido)")
         busca = st.text_input("🔍 Buscar Criança pelo Nome:")
@@ -97,7 +104,7 @@ if matricula in st.session_state.professores_db:
                         st.markdown(f"🪪 **Autorização de Retirada:** {aluno['retirada']}")
                         st.markdown(f"📞 **Telefones de Contato:** {aluno['contato']}")
 
-    # PERFIL: PROFESSOR REGULAR
+    # Perfil: Professor Regular
     elif usuario['cargo'] == "Professor Regular":
         aba1, aba2, aba3, aba4, aba5 = st.tabs(["📝 Diário & Chamada", "📅 Planejamento", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos"])
         
@@ -155,7 +162,7 @@ if matricula in st.session_state.professores_db:
         with aba5:
             st.header("Ata de Conselho de Classe")
             with st.form("form_ata", clear_on_submit=True):
-                trimestre = st.selectbox("Trimestre de Evaluacao", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
+                trimestre = st.selectbox("Trimestre de Avaliação", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
                 deliberacoes = st.text_area("Parecer Coletivo:")
                 if st.form_submit_button("📝 Registrar e Gerar Folha"):
                     salvar_dados("atas", {"trimestre": trimestre, "turma": usuario['turma'], "conteudo": deliberacoes, "emissor": usuario['nome']})
@@ -166,28 +173,25 @@ if matricula in st.session_state.professores_db:
                 ultima_ata = st.session_state.atas_salvas[-1]
                 st.markdown(f"""
                 <div style="border: 2px solid #333; padding: 25px; background-color: #fff; color: #111; font-family: monospace; margin-bottom: 20px;">
-                    <h4 style="text-align: center;">ATA OFICIAL DE CONSELHO</h4>
-                    <strong>{ultima_ata['trimestre'].upper()}</strong> | TURMA: {ultima_ata['turma'].upper()}<br><br>
-                    {ultima_ata['conteudo']}
-                </div>
-                """, unsafe_allow_html=True)
-                
-                                for p_id, p_info in st.session_state.professores_db.items():
-                    if p_info['cargo'] == "Professor Regular":
-                        st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
-st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
+ATA OFICIAL DE CONSELHO
+{ultima_ata['trimestre'].upper()} | TURMA: {ultima_ata['turma'].upper()}
+{ultima_ata['conteudo']}
+
+""", unsafe_allow_html=True)
+for p_id, p_info in st.session_state.professores_db.items():
+if p_info['cargo'] == "Professor Regular":
 st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
 st.markdown("", unsafe_allow_html=True)
-# PERFIL: PROFESSOR AEE
+# Perfil: Professor AEE
 elif usuario['cargo'] == "Professor AEE":
 st.header("🧩 Planejamento Individualizado por Aluno (AEE)")
 with st.form("form_aee", clear_on_submit=True):
 aluno_aee = st.selectbox("Criança Atendida:", [a['nome'] for a in st.session_state.alunos_db])
 objetivos = st.text_area("Objetivos de Flexibilização Curricular:")
-recursos = st.text_area("Recursos Pedagógicos Utilizados:")
+recursos = st.text_area("Resources Pedagógicos Utilizados:")
 if st.form_submit_button("💾 Salvar Planejamento AEE"):
 st.success("Planejamento gravado!")
-# PERFIL: ADMINISTRADOR
+# Perfil: Administrador
 elif usuario['cargo'] == "Administrador":
 st.header("⚙️ Painel de Controle da Direção e Coordenação")
 st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas)")
