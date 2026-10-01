@@ -1591,8 +1591,9 @@ if matricula in st.session_state.professores_db:
 {ultima_ata['conteudo']}
 
 """, unsafe_allow_html=True)
+# O CORRETO É ASSIM (Com o recuo de espaços):
 for p_id, p_info in st.session_state.professores_db.items():
-if p_info['cargo'] == "Professor Regular":
+    if p_info['cargo'] == "Professor Regular":
 st.markdown(f"✍️ {p_info['nome'].upper()} ________________________", unsafe_allow_html=True)
 st.markdown("", unsafe_allow_html=True)
 # =====================================================================
