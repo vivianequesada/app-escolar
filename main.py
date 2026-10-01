@@ -4,7 +4,7 @@ import os
 import io
 from datetime import date
 
-# Importações obrigatórias para a geração dos arquivos em PDF
+# Importações obrigatórias para a geração dos arquivos em PDF via ReportLab
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -195,16 +195,17 @@ if usuario:
                 lista_presenca = {}
                 for aluno in alunos_turma:
                     lista_presenca[aluno['id']] = st.checkbox(f"👤 {aluno['nome']}", value=True)
+                
                 if st.form_submit_button("✅ Registrar Frequência"):
-                for aluno in st.session_state.alunos_db:
-                    if aluno['id'] in lista_presenca:
-                        if lista_presenca[aluno['id']]:
-                            aluno['faltas_consecutivas'] = 0
-                        else:
-                            aluno['faltas_consecutivas'] += 1
-                salvar_dados("alunos")
-                st.success("Frequência registrada com sucesso!")
-                st.rerun()
+                    for aluno in st.session_state.alunos_db:
+                        if aluno['id'] in lista_presenca:
+                            if lista_presenca[aluno['id']]:
+                                aluno['faltas_consecutivas'] = 0
+                            else:
+                                aluno['faltas_consecutivas'] += 1
+                    salvar_dados("alunos")
+                    st.success("Frequência registrada com sucesso!")
+                    st.rerun()
 
         elif menu_prof == "📅 Planejamento Quinzenal":
             st.header("📅 Planejamento Pedagógico Quinzenal")
@@ -338,16 +339,24 @@ if usuario:
                 alertas_ativos = True
                 st.error(f"⚠️ RISCO DE EVASÃO DETECTADO: A criança {aluno['nome']} ({aluno['turma']}) acumulou {aluno['faltas_consecutivas']} faltas consecutivas! Contato dos pais para busca ativa: {aluno['contato']}")
         if not alertas_ativos:
-st.success("✅ Nenhuma evasão detectada nas turmas de Educação Infantil.")
-st.divider()
-maba1, maba2, maba3, maba4 = st.tabs(["👥 Gerenciar Professores", "👶 Matricular Alunos", "📅 Ver Planejamentos", "📋 Histórico de Ocorrências"])
-with maba1:
-st.subheader("Gerenciamento de Funcionários")
-acao_p = st.radio("Operação (Professores):", ["Cadastrar Novo", "Editar Perfil", "Excluir Registro"], horizontal=True)
-if acao_p == "Cadastrar Novo":
-with st.form("add_prof", clear_on_submit=True):
-mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
-nome_p = st.text_input("Nome Completo:")
-cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
-turma_p = st.selectbox("Turma Atribuída:", TURMAS_ESCOLARES)
-email_p = st.text_input("E-mail corporativo:")
+            st.success("✅ Nenhuma evasão detectada nas turmas de Educação Infantil.")
+        st.divider()
+        
+        maba1, maba2, maba3, maba4 = st.tabs(["👥 Gerenciar Professores", "👶 Matricular Alunos", "📅 Ver Planejamentos", "📋 Histórico de Ocorrências"])
+        
+        with maba1:
+            st.subheader("Gerenciamento de Funcionários")
+            acao_p = st.radio("Operação (Professores):", ["Cadastrar Novo", "Editar Perfil", "Excluir Registro"], horizontal=True)
+            if acao_p == "Cadastrar Novo":
+                with st.form("add_prof", clear_on_submit=True):
+                    mat_n = st.text_input("Nova Matrícula (Código de Acesso):")
+                    nome_p = st.text_input("Nome Completo:")
+                    cargo_p = st.selectbox("Cargo:", ["Professor Regular", "Professor AEE", "Monitor", "Administrador"])
+                    turma_p = st.selectbox("Turma Atribuída:", TURMAS_ESCOLARES)
+                    email_p = st.text_input("E-mail corporativo:")
+                    if st.form_submit_button("➕ Salvar Funcionário"):
+                        if mat_n and nome_p:
+                            st.session_state.professores_db[mat_n] = {"nome": nome_p, "cargo": cargo_p, "turma": turma_p, "email": email_p}
+                            salvar_dados("db")
+                            st.success(f"{nome_p} cadastrado!")
+                            st.rerun()
