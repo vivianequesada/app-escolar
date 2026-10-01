@@ -310,14 +310,4 @@ else:
 st.title("🧸 Portal de Gestão da Educação Infantil")
 st.info("Insira seu código de acesso ou matrícula na barra lateral esquerda para prosseguir.")
 
-### 🔑 Códigos de Acesso para Entrar:
-*   **`789`** — Painel do **Administrador/Direção** (Libera as abas de gerenciar turmas, alunos, professores, histórico de mordidas e alertas críticos de evasão por falta).
-*   **`123`** — Painel do **Professor Regular** (Onde ficam os diários, a folha de chamada, o cronograma quinzenal da BNCC e as atas oficiais).
-*   **`456`** — Painel do **Professor AEE** (Para inclusão).
-*   **`000`** — Painel dos **Monitores** (Busca rápida de carômetro de segurança e fichas médicas de alergia).
-
-<FollowUp>
-Assim que salvar seu arquivo e o Streamlit Cloud atualizar o site, me avise:
-* O portal **abriu normalmente** com a caixa de senha do lado esquerdo?
-* Quer ajuda para adicionar um botão de **exportar a folha de presença em formato de planilha Excel** ou prefere focar em outra melhoria visual?
-</FollowUp>
+st.info("Insira seu código de acesso ou matrícula na barra lateral esquerda para prosseguir.")
