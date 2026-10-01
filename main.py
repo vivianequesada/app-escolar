@@ -173,9 +173,10 @@ if matricula in st.session_state.professores_db:
             with st.form("form_ata", clear_on_submit=True):
                 trimestre = st.selectbox("Trimestre de Avaliação", ["1º Trimestre", "2º Trimestre", "3º Trimestre"])
 deliberacoes = st.text_area("Parecer Coletivo da Turma:")
-if st.form_submit_button("📝 Registrar e Gerar Folha"):
-salvar_dados("atas", {"trimestre": trimestre, "turma": usuario['turma'], "conteudo": deliberacoes, "emissor": usuario['nome']})
-st.success("Ata oficial gravada!")
+                if st.form_submit_button("📝 Registrar e Gerar Folha"):
+                    salvar_dados("atas", {"trimestre": trimestre, "turma": usuario['turma'], "conteudo": deliberacoes, "emissor": usuario['nome']})
+                    st.success("Ata salva!")
+
 st.rerun()
 if st.session_state.atas_salvas:
 st.divider()
