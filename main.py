@@ -337,3 +337,69 @@ if usuario:
                     salvar_dados("alunos")
                     st.success("Removido!")
                     st.rerun()
+# =====================================================================
+# PERFIL: PROFESSOR AEE (Inclusão, Histórico de PDI/PEI e Exportação)
+# =====================================================================
+def tela_professor_aee(usuario):
+    st.header("🧩 Atendimento Educacional Especializado (AEE)")
+    menu_aee = st.selectbox("Selecione a Ação:", ["Lançar Prontuário / PDI / PEI", "Visualizar e Exportar Histórico"])
+    
+    if menu_aee == "Lançar Prontuário / PDI / PEI":
+        with st.form("form_aee_pdi", clear_on_submit=True):
+            aluno_aee = st.selectbox("Criança Atendida:", [a['nome'] for a in st.session_state.alunos_db])
+            periodo_ano = st.selectbox("Período do Relatório:", ["1º Trimestre / PEI", "2º Trimestre / PEI", "3º Trimestre / PEI", "Relatório de Evolução Anual"])
+            objetivos = st.text_area("Objetivos de Flexibilização Curricular (PDI):")
+            recursos = st.text_area("Recursos Pedagógicos e Tecnologias Assistivas Utilizadas:")
+            
+            if st.form_submit_button("💾 Salvar Parecer Pedagógico"):
+                # Inicializa o histórico de relatórios na ficha se não existir
+                for a in st.session_state.alunos_db:
+                    if a['nome'] == aluno_aee:
+                        if 'historico_aee' not in a or isinstance(a['historico_aee'], str):
+                            a['historico_aee'] = []
+                        
+                        # Adiciona o novo relatório sem apagar os anteriores do ano
+                        a['historico_aee'].append({
+                            "periodo": periodo_ano,
+                            "data_registro": date.today().strftime("%d/%m/%Y"),
+                            "objetivos": objetivos,
+                            "recursos": recursos,
+                            "professor": usuario['nome']
+                        })
+                salvar_dados("alunos")
+                st.success(f"Documento do {periodo_ano} para {aluno_aee} arquivado no sistema!")
+
+    elif menu_aee == "Visualizar e Exportar Histórico":
+        aluno_sel = st.selectbox("Selecione o Aluno para Ver Ficha Completa:", [a['nome'] for a in st.session_state.alunos_db])
+        for a in st.session_state.alunos_db:
+            if a['nome'] == aluno_sel:
+                st.markdown(f"### Prontuário Clínico-Pedagógico: {a['nome']}")
+                st.write(f"🩺 **Terapias Externas:** {a.get('terapias', 'Nenhuma registrada')}")
+                st.write(f"⏱️ **Horários Clínicos:** {a.get('dias_horarios_terapias', 'Não informado')}")
+                st.write(f"📋 **Encaminhamentos:** {a.get('encaminhamentos', 'Nenhum lançado')}")
+                
+                st.divider()
+                st.subheader("📚 Histórico de PDI / PEI deste Ano")
+                
+                historico = a.get('historico_aee', [])
+                if not historico:
+                    st.info("Nenhum relatório trimestral lançado para esta criança ainda.")
+                else:
+                    for idx, rel in enumerate(historico):
+                        with st.container(border=True):
+                            st.markdown(f"#### 🧩 {rel['periodo']} — Gravado em {rel['data_registro']}")
+                            st.markdown(f"**Professor Responsável:** {rel['professor']}")
+                            st.write(f"**Objetivos e Metas:** {rel['objetivos']}")
+                            st.write(f"**Recursos Utilizados:** {rel['recursos']}")
+                            
+                            # Monta o texto limpo para exportar
+                            texto_documento = f"RELATÓRIO DE INCLUSÃO - Ary Levy\nAluno: {a['nome']}\nTurma: {a['turma']}\nDocumento: {rel['periodo']}\nData: {rel['data_registro']}\n\nOBJETIVOS:\n{rel['objetivos']}\n\nRECURSOS:\n{rel['recursos']}"
+                            
+                            # Botão nativo para baixar como arquivo compatível com Word (.doc)
+                            st.download_button(
+                                label="📥 Baixar este Relatório para o Word",
+                                data=texto_documento.encode('utf-8'),
+                                file_name=f"Relatorio_{rel['periodo'].replace(' ', '_')}_{a['nome'].replace(' ', '_')}.doc",
+                                mime="application/msword",
+                                key=f"down_{idx}"
+                            )
