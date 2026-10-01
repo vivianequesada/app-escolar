@@ -100,7 +100,7 @@ if matricula in st.session_state.professores_db:
     # PERFIL: PROFESSOR REGULAR
     elif usuario['cargo'] == "Professor Regular":
         st.subheader(f"Sala Virtual: {usuario['turma']}")
-               menu_professor = st.selectbox(
+            menu_professor = st.selectbox(
             "Selecione o Módulo de Trabalho:",
             ["📝 Diário & Chamada", "📅 Planejamento BNCC", "👶 Ocorrências da Rotina", "📊 Relatório Descritivo", "📋 Atas & Conselhos", "🏢 Agendamento de Espaços", "📅 Calendário de Avaliações", "📢 Quadro de Avisos"]
         )        
