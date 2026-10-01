@@ -153,7 +153,7 @@ if usuario:
         elif menu_prof == "📅 Planejamento Quinzenal":
             st.header("📅 Planejamento Pedagógico Quinzenal")
             with st.form("form_regular", clear_on_submit=True):
-                mes = st.selectbox("Mês de Referência:", ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"])
+                mes = st.selectbox("Mês de Reference:", ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"])
                 quinzena = st.radio("Quinzena:", ["1ª Quinzena", "2ª Quinzena"], horizontal=True)
                 materia = st.selectbox("Componente Curricular / Matéria:", MATERIAS_PEDAGOGICAS)
                 atividades = st.text_area("Descrição Detalhada das Vivências Pedagógicas:")
@@ -272,7 +272,7 @@ if usuario:
             aluno_sel = st.selectbox("Selecione o Aluno:", [a['nome'] for a in st.session_state.alunos_db])
             for a in st.session_state.alunos_db:
                 if a['nome'] == aluno_sel:
-                    st.write(f"激️ Terapias Externas: {a.get('terapias','Nenhuma')}")
+                    st.write(f"🩺 Terapias Externas: {a.get('terapias','Nenhuma')}")
                     st.write(f"⏱️ Dias/Horários Clínicos: {a.get('dias_horarios_terapias','Não informado')}")
                     historico = a.get('historico_aee', [])
                     if historico:
@@ -305,6 +305,8 @@ if usuario:
     # =====================================================================
     elif usuario['cargo'] == "Administrador":
         st.header("⚙️ Painel de Controle da Direção e Coordenação")
+        
+        # ALERTA DE EVASÃO AUTOMÁTICO EXIGIDO POR VOCÊ
         st.subheader("🚨 Central de Alertas Críticos (Faltas Consecutivas >= 3)")
         alertas_ativos = False
         for aluno in st.session_state.alunos_db:
@@ -347,3 +349,11 @@ if usuario:
                         salvar_dados("db")
                         st.success("Dados updated!")
                         st.rerun()
+                        
+        with maba2:
+            st.subheader("Gerenciamento do Carômetro de Alunos")
+            acao_a = st.radio("Operação (Alunos):", ["Cadastrar Novo Aluno", "Editar Ficha de Saúde & Terapias", "Excluir Aluno"], horizontal=True)
+            if acao_a == "Cadastrar Novo Aluno":
+                with st.form("add_aluno", clear_on_submit=True):
+                    nome_n = st.text_input("Nome Completo do Aluno:")
+                    turma_n = st.selectbox("Turma Escolar:", TURMAS_ESCOLARES)
