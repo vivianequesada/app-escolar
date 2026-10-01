@@ -2,11 +2,6 @@ import streamlit as st
 import json
 import os
 from datetime import date
-import io
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
 
 # =====================================================================
 # 1. CONFIGURAÇÃO DA PÁGINA (Deve ser o primeiro comando Streamlit)
